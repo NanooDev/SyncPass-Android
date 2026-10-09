@@ -1,7 +1,20 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+
+val envFile = rootProject.file(".env")
+val envProps = Properties()
+if (envFile.exists()) {
+    envFile.inputStream().use { envProps.load(it) }
+}
+// Prioridad: .env > variable de entorno del sistema > fallback solo para compilar
+val apiBaseUrl: String =
+    envProps.getProperty("API_BASE_URL")
+        ?: System.getenv("API_BASE_URL")
+        ?: "https://172-233-15-71.ip.linodeusercontent.com/"
 
 android {
     namespace = "com.example.kotlin_login"
@@ -15,6 +28,8 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
+
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
