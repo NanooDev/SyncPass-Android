@@ -40,11 +40,15 @@ import com.example.kotlin_login.ui.theme.KotlinloginTheme
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = viewModel(),
+    isCognitoLoading: Boolean = false,
+    onCognitoClick: () -> Unit = {},
     onLoginSuccess: (token: String) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
     LoginContent(
         state = state,
+        isCognitoLoading = isCognitoLoading,
+        onCognitoClick = onCognitoClick,
         onUsernameChange = viewModel::onUsernameChange,
         onPasswordChange = viewModel::onPasswordChange,
         onTogglePassword = viewModel::onTogglePasswordVisibility,
@@ -57,6 +61,8 @@ fun LoginScreen(
 @Composable
 fun LoginContent(
     state: LoginUiState,
+    isCognitoLoading: Boolean = false,
+    onCognitoClick: () -> Unit = {},
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onTogglePassword: () -> Unit,
@@ -151,6 +157,29 @@ fun LoginContent(
                     )
                 } else {
                     Text("Ingresar")
+                }
+            }
+
+            // Separador para opción Cognito
+            androidx.compose.material3.HorizontalDivider(
+                modifier = Modifier.padding(vertical = 4.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+
+            // Botón Cognito Hosted UI (Paso 6 cognito-auth)
+            androidx.compose.material3.OutlinedButton(
+                onClick = onCognitoClick,
+                enabled = !isCognitoLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                if (isCognitoLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Text("Continuar con Amazon Cognito")
                 }
             }
         }

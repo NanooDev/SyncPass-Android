@@ -24,3 +24,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "kotlin-login"
 include(":app")
+include(":cognito-auth")
+

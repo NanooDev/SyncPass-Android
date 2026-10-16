@@ -10,11 +10,19 @@ val envProps = Properties()
 if (envFile.exists()) {
     envFile.inputStream().use { envProps.load(it) }
 }
+fun envOr(key: String, fallback: String): String =
+    envProps.getProperty(key) ?: System.getenv(key) ?: fallback
+
 // Prioridad: .env > variable de entorno del sistema > fallback solo para compilar
 val apiBaseUrl: String =
-    envProps.getProperty("API_BASE_URL")
-        ?: System.getenv("API_BASE_URL")
-        ?: "https://172-233-15-71.ip.linodeusercontent.com/"
+    envOr("API_BASE_URL", "https://172-233-15-71.ip.linodeusercontent.com/")
+
+val cognitoRedirectDefault = "com.rojas.syncpass://cognito/callback"
+val cognitoIssuer: String = envOr("COGNITO_ISSUER", "https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ZhTULhf5B")
+val cognitoClientId: String = envOr("COGNITO_CLIENT_ID", "7jlu3v32pqfn5nimh84m9ga64o")
+val cognitoRedirect: String = envOr("COGNITO_REDIRECT_URI", cognitoRedirectDefault)
+val cognitoLogout: String = envOr("COGNITO_LOGOUT_URI", cognitoRedirect)
+val cognitoScopes: String = envOr("COGNITO_SCOPES", "email openid phone")
 
 android {
     namespace = "com.example.kotlin_login"
@@ -24,12 +32,19 @@ android {
 
     defaultConfig {
         applicationId = "com.example.kotlin_login"
-        minSdk = 37
-        targetSdk = 37
+        minSdk = 28
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
+        manifestPlaceholders["appAuthRedirectScheme"] = "com.rojas.syncpass"
+
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "COGNITO_ISSUER", "\"$cognitoIssuer\"")
+        buildConfigField("String", "COGNITO_CLIENT_ID", "\"$cognitoClientId\"")
+        buildConfigField("String", "COGNITO_REDIRECT_URI", "\"$cognitoRedirect\"")
+        buildConfigField("String", "COGNITO_LOGOUT_URI", "\"$cognitoLogout\"")
+        buildConfigField("String", "COGNITO_SCOPES", "\"$cognitoScopes\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -47,8 +62,7 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true // Se agrega para exponer "API_BASE_URL" sin hardcodear. Sin este flag Gradle
-                           // no genera com.rojas.syncpass.BuildConfig y AppConfig no compila.
+        buildConfig = true
     }
 }
 
@@ -74,7 +88,13 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.androidx.compose.material.icons.core)
-    implementation(libs.androidx.compose.material.icons.extended) // Visibility/VisibilityOff viven aquí, no en core
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
-}
+
+    // Navigation Compose
+    implementation(libs.androidx.navigation.compose)
+
+    // Módulo reutilizable de login Cognito
+    implementation(project(":cognito-auth"))
+}
