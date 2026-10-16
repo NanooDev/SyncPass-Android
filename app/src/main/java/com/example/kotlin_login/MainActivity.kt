@@ -4,13 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import com.example.kotlin_login.ui.home.HomeScreen
+import com.example.kotlin_login.ui.login.LoginScreen
 import com.example.kotlin_login.ui.theme.KotlinloginTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,29 +18,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KotlinloginTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                var token: String? by rememberSaveable { mutableStateOf<String?>(null) }
+                val currentToken: String? = token
+                if (currentToken == null) {
+                    LoginScreen(onLoginSuccess = { t -> token = t })
+                } else {
+                    HomeScreen(accessToken = currentToken, onLogout = { token = null })
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    KotlinloginTheme {
-        Greeting("Android")
     }
 }
