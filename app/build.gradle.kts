@@ -18,7 +18,7 @@ val apiBaseUrl: String =
     envOr("API_BASE_URL", "https://172-233-15-71.ip.linodeusercontent.com/")
 
 val cognitoRedirectDefault = "com.example.kotlinlogin://cognito/callback"
-val cognitoIssuer: String = envOr("COGNITO_ISSUER", "https://cognito-idp.us-east-1.amazonaws.com/")
+val cognitoIssuer: String = envOr("COGNITO_ISSUER", "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_RlB8Ft9Z2")
 val cognitoClientId: String = envOr("COGNITO_CLIENT_ID", "2988naivr3qfmjhhm35k5lubvd")
 val cognitoRedirect: String = envOr("COGNITO_REDIRECT_URI", cognitoRedirectDefault)
 val cognitoLogout: String = envOr("COGNITO_LOGOUT_URI", cognitoRedirect)
