@@ -17,9 +17,9 @@ fun envOr(key: String, fallback: String): String =
 val apiBaseUrl: String =
     envOr("API_BASE_URL", "https://172-233-15-71.ip.linodeusercontent.com/")
 
-val cognitoRedirectDefault = "com.rojas.syncpass://cognito/callback"
-val cognitoIssuer: String = envOr("COGNITO_ISSUER", "https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ZhTULhf5B")
-val cognitoClientId: String = envOr("COGNITO_CLIENT_ID", "7jlu3v32pqfn5nimh84m9ga64o")
+val cognitoRedirectDefault = "com.example.kotlin_login://cognito/callback"
+val cognitoIssuer: String = envOr("COGNITO_ISSUER", "https://cognito-idp.us-east-1.amazonaws.com/")
+val cognitoClientId: String = envOr("COGNITO_CLIENT_ID", "2988naivr3qfmjhhm35k5lubvd")
 val cognitoRedirect: String = envOr("COGNITO_REDIRECT_URI", cognitoRedirectDefault)
 val cognitoLogout: String = envOr("COGNITO_LOGOUT_URI", cognitoRedirect)
 val cognitoScopes: String = envOr("COGNITO_SCOPES", "email openid phone")
@@ -37,7 +37,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        manifestPlaceholders["appAuthRedirectScheme"] = "com.rojas.syncpass"
+        manifestPlaceholders["appAuthRedirectScheme"] = "com.example.kotlin_login"
 
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         buildConfigField("String", "COGNITO_ISSUER", "\"$cognitoIssuer\"")
