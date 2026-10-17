@@ -33,7 +33,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:scheme="com.example.kotlin_login"
+                    android:scheme="com.example.kotlinlogin"
                     android:host="cognito"
                     android:path="/callback" />
             </intent-filter>
