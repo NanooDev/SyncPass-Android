@@ -1,6 +1,6 @@
-# Notificaciones Push con ntfy.sh (SyncPass Android)
+# Notificaciones Push con ntfy.sh y BFF Spring Boot (SyncPass Android)
 
-La aplicacion SyncPass para Android recibe notificaciones push en tiempo real sin requerir Firebase ni Google Play Services, utilizando la infraestructura abierta de **ntfy.sh**.
+La aplicacion SyncPass para Android recibe notificaciones push en tiempo real sin requerir Firebase ni Google Play Services, utilizando la infraestructura de **ntfy.sh** y el backend BFF **Spring Boot** (`fs2-api`).
 
 La arquitectura se basa en suscripcion por **Server-Sent Events (SSE)** en segundo plano hacia un topico secreto derivado criptograficamente del correo electronico del usuario autenticado.
 
@@ -8,7 +8,7 @@ La arquitectura se basa en suscripcion por **Server-Sent Events (SSE)** en segun
 
 ## 1. Algoritmo de Derivacion de Topico
 
-Para garantizar aislamiento y privacidad entre los usuarios del sistema sin configuraciones complejas:
+Tanto el cliente Android (`NtfyTopics.kt`), la plataforma Web (`src/services/ntfy.ts`) y el backend BFF (`NotificationService.java`) comparten la misma logica:
 
 1. Normalizacion del email: `email.trim().lowercase()`.
 2. Calculo del hash **SHA-256** del email en codificacion UTF-8.
@@ -19,7 +19,7 @@ Formato resultante:
 `app_vibe_[20_caracteres_hex]`
 
 ### Ejemplos:
-- `docente.coordinador@duocuc.cl` -> `app_vibe_a8f9c...`
+- `docente.dev@gmail.com` -> `app_vibe_8e63635b0c5401804b4b`
 - `admin.syncpass@duocuc.cl` -> `app_vibe_...`
 
 Implementado en: `com.example.kotlin_login.feature.notificaciones.NtfyTopics`.
@@ -43,22 +43,15 @@ Implementado en: `com.example.kotlin_login.feature.notificaciones.NtfyTopics`.
    - Se desconecta y finaliza limpiamente al cerrar sesion (`onLogout`).
 
 3. **Publicador de Notificaciones (NtfySender)**:
-   - Utilidad HTTP para emitir eventos hacia `https://ntfy.sh/<topico>` con cabeceras `Title` y `Priority`.
+   - `sendPushNotification(...)`: Emision directa hacia `https://ntfy.sh/<topico>`.
+   - `sendPushNotificationViaBff(...)`: Emision a traves del endpoint BFF de Spring Boot `POST /api/notificar`.
 
 ---
 
-## 3. Pruebas y Validacion
+## 3. Endpoints del Backend BFF (fs2-api)
 
-### A. Desde la Aplicacion Movil (Pantalla Admin / Docente):
-Ingresar con rol Administrador y presionar el boton **Emitir Notificacion Push de Prueba**. El servicio SSE capturara el evento de inmediato y desplegara la alerta en la barra de estado de Android.
+El backend Spring Boot expone:
+- `POST /api/notificar`: Emite la notificacion hacia ntfy.sh con titulo, cuerpo y prioridad.
+- `GET /api/notificar/topic/{email}`: Retorna el topico secreto calculado para un usuario.
 
-### B. Mediante cURL directo en terminal:
-```bash
-curl -H "Title: SyncPass Alerta" \
-     -H "Priority: high" \
-     -d "Acreditacion registrada para taller de alfabetizacion digital" \
-     https://ntfy.sh/app_vibe_a8f9c12e4d567890abcd
-```
-
-### C. Desde la Plataforma Web SyncPass:
-El modulo Web incorpora la funcion `sendPushNotification` que calcula el topico del destinatario y emite la alerta hacia ntfy.sh via HTTP POST.
+Ambos endpoints estan configurados con `permitAll()` en `SecurityConfig.java` para permitir pruebas sin restriccion de token.
