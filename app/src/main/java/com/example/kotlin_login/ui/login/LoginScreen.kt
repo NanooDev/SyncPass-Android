@@ -199,24 +199,7 @@ fun LoginScreen(
                         }
                     }
 
-                    Row(
-                        modifier = Modifier.padding(top = 8.dp, bottom = 18.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(SyncPassEmerald)
-                        )
-                        Spacer(modifier = Modifier.width(5.dp))
-                        Text(
-                            text = "User Pool us-east-1_RlB8Ft9Z2 · PKCE",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = SyncPassEmerald
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     HorizontalDivider(
                         color = MaterialTheme.colorScheme.outline,
@@ -361,7 +344,7 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "API EC2: 54.164.69.142",
+                    text = "SyncPass Móvil v2.2",
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

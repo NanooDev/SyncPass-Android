@@ -64,8 +64,7 @@ fun HomeScreen(
         topBar = {
             SyncPassTopBar(
                 title = "SyncPass Móvil",
-                subtitle = "API EC2: 54.164.69.142",
-                currentRole = detectedRole,
+                subtitle = "Vinculación Territorial · Duoc UC",
                 onLogoutClick = onLogout
             )
         },

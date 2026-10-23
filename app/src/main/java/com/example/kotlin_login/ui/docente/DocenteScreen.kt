@@ -84,7 +84,6 @@ fun DocenteScreen(
             SyncPassTopBar(
                 title = "Coordinación y Docencia",
                 subtitle = "Vinculación con el Medio · Duoc UC",
-                currentRole = UserRole.DOCENTE,
                 onBackClick = onBackClick,
                 onLogoutClick = onLogoutClick
             )

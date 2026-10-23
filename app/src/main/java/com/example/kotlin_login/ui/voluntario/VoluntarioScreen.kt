@@ -64,7 +64,6 @@ fun VoluntarioScreen(
             SyncPassTopBar(
                 title = "Acreditación en Terreno",
                 subtitle = "Estudiante Voluntario · Modo Operativo",
-                currentRole = UserRole.VOLUNTARIO,
                 onBackClick = onBackClick,
                 onLogoutClick = onLogoutClick
             )

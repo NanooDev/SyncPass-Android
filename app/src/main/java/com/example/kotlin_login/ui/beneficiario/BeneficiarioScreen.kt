@@ -30,7 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.kotlin_login.domain.model.UserRole
 import com.example.kotlin_login.ui.components.QrCodeView
 import com.example.kotlin_login.ui.components.SyncPassTopBar
@@ -50,8 +52,7 @@ fun BeneficiarioScreen(
         topBar = {
             SyncPassTopBar(
                 title = "Portal del Beneficiario",
-                subtitle = "Pase de Acceso y Valoración Ciudadana",
-                currentRole = UserRole.BENEFICIARIO,
+                subtitle = "Pase de Acceso y Valoración",
                 onBackClick = onBackClick,
                 onLogoutClick = onLogoutClick
             )
@@ -198,7 +199,7 @@ fun BeneficiarioScreen(
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             listOf("Bajo" to 1, "Medio" to 2, "Alto" to 3, "Excelente" to 4).forEach { (label, value) ->
                                 val isSelected = utilityLevel == value
@@ -220,7 +221,9 @@ fun BeneficiarioScreen(
                                 ) {
                                     Text(
                                         text = label,
-                                        style = MaterialTheme.typography.labelSmall,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
                                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }

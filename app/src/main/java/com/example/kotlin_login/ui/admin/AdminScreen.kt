@@ -54,7 +54,6 @@ fun AdminScreen(
             SyncPassTopBar(
                 title = "Administración General",
                 subtitle = "Gobernanza Territorial y Control RBAC",
-                currentRole = UserRole.ADMIN,
                 onBackClick = onBackClick,
                 onLogoutClick = onLogoutClick
             )
