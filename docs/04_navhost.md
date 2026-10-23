@@ -5,7 +5,7 @@
 
 ---
 
-## 🎯 1. Objetivo y Justificación
+## 1. Objetivo y Justificación
 
 En fases iniciales, la navegación entre `Login` y `Home` se realizaba mediante condicionales en el estado (`if (token == null) ... else ...`).
 
@@ -13,7 +13,7 @@ A medida que el proyecto escala para soportar los **4 Roles** del caso SyncPass 
 
 ---
 
-## 🛠️ 2. Dependencias (`gradle/libs.versions.toml`)
+## 2. Dependencias (`gradle/libs.versions.toml`)
 
 ```toml
 [versions]
@@ -32,7 +32,7 @@ dependencies {
 
 ---
 
-## 🗺️ 3. Rutas y Destinos (`ui/navigation/AppScreen.kt`)
+## 3. Rutas y Destinos (`ui/navigation/AppScreen.kt`)
 
 Las rutas se definen mediante una clase sellada (`sealed class`) inmutable para evitar strings sueltos (magic strings):
 
@@ -49,7 +49,7 @@ sealed class AppScreen(val route: String) {
 
 ---
 
-## 🧩 4. Componente NavHost (`ui/navigation/AppNavHost.kt`)
+## 4. Componente NavHost (`ui/navigation/AppNavHost.kt`)
 
 El `AppNavHost` desacopla la definición de pantallas del controlador de ciclo de vida (`MainActivity`), permitiendo pruebas unitarias y previsualizaciones limpias:
 
@@ -99,7 +99,7 @@ fun AppNavHost(
 
 ---
 
-## 🔄 5. Integración con Amazon Cognito y API REST
+## 5. Integración con Amazon Cognito y API REST
 
 En `MainActivity.kt`:
 1. Se inicializa el `rememberNavController()`.

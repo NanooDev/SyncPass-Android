@@ -1,21 +1,28 @@
 package com.example.kotlin_login.ui.login
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -34,8 +41,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.kotlin_login.core.jwt.JwtDecoder
 import com.example.kotlin_login.ui.components.AuthCard
 import com.example.kotlin_login.ui.theme.KotlinloginTheme
+import com.example.kotlin_login.ui.theme.SyncPassBluePrimary
+import com.example.kotlin_login.ui.theme.SyncPassBorder
+import com.example.kotlin_login.ui.theme.SyncPassTextSecondary
 
 @Composable
 fun LoginScreen(
@@ -89,18 +100,19 @@ fun LoginContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AuthCard(
             title = "SyncPass",
-            subtitle = "Inicia sesión para acreditar asistencia"
+            subtitle = "Vinculación con el Medio • Duoc UC"
         ) {
             OutlinedTextField(
                 value = state.username,
                 onValueChange = onUsernameChange,
-                label = { Text("Usuario o correo") },
+                label = { Text("Correo institucional o usuario") },
                 singleLine = true,
                 isError = state.usernameError != null,
                 supportingText = { state.usernameError?.let { Text(it) } },
@@ -160,14 +172,13 @@ fun LoginContent(
                 }
             }
 
-            // Separador para opción Cognito
-            androidx.compose.material3.HorizontalDivider(
+            HorizontalDivider(
                 modifier = Modifier.padding(vertical = 4.dp),
-                color = MaterialTheme.colorScheme.outlineVariant
+                color = SyncPassBorder
             )
 
             // Botón Cognito Hosted UI (Paso 6 cognito-auth)
-            androidx.compose.material3.OutlinedButton(
+            OutlinedButton(
                 onClick = onCognitoClick,
                 enabled = !isCognitoLoading,
                 modifier = Modifier
@@ -182,6 +193,62 @@ fun LoginContent(
                     Text("Continuar con Amazon Cognito")
                 }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Sección de Acceso Rápido por Rol para Evaluación Académica
+            Text(
+                text = "ACCESO DIRECTO POR ROL (EVALUACIÓN)",
+                style = MaterialTheme.typography.labelSmall,
+                color = SyncPassTextSecondary
+            )
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = { onLoginSuccess(JwtDecoder.createDemoToken("coordinator")) },
+                        modifier = Modifier.weight(1f),
+                        border = BorderStroke(1.dp, SyncPassBluePrimary)
+                    ) {
+                        Text("Docente", color = SyncPassBluePrimary, style = MaterialTheme.typography.labelMedium)
+                    }
+
+                    OutlinedButton(
+                        onClick = { onLoginSuccess(JwtDecoder.createDemoToken("volunteer")) },
+                        modifier = Modifier.weight(1f),
+                        border = BorderStroke(1.dp, SyncPassBluePrimary)
+                    ) {
+                        Text("Voluntario", color = SyncPassBluePrimary, style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = { onLoginSuccess(JwtDecoder.createDemoToken("attendee")) },
+                        modifier = Modifier.weight(1f),
+                        border = BorderStroke(1.dp, SyncPassBluePrimary)
+                    ) {
+                        Text("Beneficiario", color = SyncPassBluePrimary, style = MaterialTheme.typography.labelMedium)
+                    }
+
+                    OutlinedButton(
+                        onClick = { onLoginSuccess(JwtDecoder.createDemoToken("admin")) },
+                        modifier = Modifier.weight(1f),
+                        border = BorderStroke(1.dp, SyncPassBluePrimary)
+                    ) {
+                        Text("Admin", color = SyncPassBluePrimary, style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
         }
         SnackbarHost(hostState = snackbar)
     }
@@ -192,7 +259,7 @@ fun LoginContent(
 private fun LoginContentPreview() {
     KotlinloginTheme {
         LoginContent(
-            state = LoginUiState(username = "juan_perez", password = "Password123"),
+            state = LoginUiState(username = "docente@duocuc.cl", password = "Password123"),
             onUsernameChange = {},
             onPasswordChange = {},
             onTogglePassword = {},
