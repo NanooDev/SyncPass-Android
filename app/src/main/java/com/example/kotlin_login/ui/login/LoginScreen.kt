@@ -1,7 +1,11 @@
 package com.example.kotlin_login.ui.login
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,7 +13,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +25,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -31,21 +42,37 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kotlin_login.core.jwt.JwtDecoder
-import com.example.kotlin_login.ui.components.AuthCard
-import com.example.kotlin_login.ui.theme.KotlinloginTheme
-import com.example.kotlin_login.ui.theme.SyncPassBluePrimary
+import com.example.kotlin_login.ui.theme.SyncPassAmber
+import com.example.kotlin_login.ui.theme.SyncPassAmberLight
+import com.example.kotlin_login.ui.theme.SyncPassBackground
 import com.example.kotlin_login.ui.theme.SyncPassBorder
+import com.example.kotlin_login.ui.theme.SyncPassCyan
+import com.example.kotlin_login.ui.theme.SyncPassCyanLight
+import com.example.kotlin_login.ui.theme.SyncPassEmerald
+import com.example.kotlin_login.ui.theme.SyncPassEmeraldLight
+import com.example.kotlin_login.ui.theme.SyncPassIndigo
+import com.example.kotlin_login.ui.theme.SyncPassIndigoLight
+import com.example.kotlin_login.ui.theme.SyncPassSlate800
+import com.example.kotlin_login.ui.theme.SyncPassSlate900
+import com.example.kotlin_login.ui.theme.SyncPassSurface
+import com.example.kotlin_login.ui.theme.SyncPassTextPrimary
 import com.example.kotlin_login.ui.theme.SyncPassTextSecondary
 
 @Composable
@@ -56,37 +83,13 @@ fun LoginScreen(
     onLoginSuccess: (token: String) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
-    LoginContent(
-        state = state,
-        isCognitoLoading = isCognitoLoading,
-        onCognitoClick = onCognitoClick,
-        onUsernameChange = viewModel::onUsernameChange,
-        onPasswordChange = viewModel::onPasswordChange,
-        onTogglePassword = viewModel::onTogglePasswordVisibility,
-        onLoginClick = viewModel::onLoginClick,
-        onErrorShown = viewModel::onErrorShown,
-        onLoginSuccess = onLoginSuccess
-    )
-}
-
-@Composable
-fun LoginContent(
-    state: LoginUiState,
-    isCognitoLoading: Boolean = false,
-    onCognitoClick: () -> Unit = {},
-    onUsernameChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onTogglePassword: () -> Unit,
-    onLoginClick: () -> Unit,
-    onErrorShown: () -> Unit,
-    onLoginSuccess: (token: String) -> Unit = {}
-) {
     val snackbar = remember { SnackbarHostState() }
+    var showManualForm by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.loginError) {
         state.loginError?.let {
             snackbar.showSnackbar(it)
-            onErrorShown()
+            viewModel.onErrorShown()
         }
     }
 
@@ -97,174 +100,328 @@ fun LoginContent(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(SyncPassBackground)
+            .padding(20.dp),
+        contentAlignment = Alignment.Center
     ) {
-        AuthCard(
-            title = "SyncPass",
-            subtitle = "Vinculación con el Medio • Duoc UC"
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            OutlinedTextField(
-                value = state.username,
-                onValueChange = onUsernameChange,
-                label = { Text("Correo institucional o usuario") },
-                singleLine = true,
-                isError = state.usernameError != null,
-                supportingText = { state.usernameError?.let { Text(it) } },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = state.password,
-                onValueChange = onPasswordChange,
-                label = { Text("Contraseña") },
-                singleLine = true,
-                isError = state.passwordError != null,
-                supportingText = { state.passwordError?.let { Text(it) } },
-                visualTransformation = if (state.isPasswordVisible)
-                    VisualTransformation.None
-                else
-                    PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = onTogglePassword) {
-                        Icon(
-                            imageVector = if (state.isPasswordVisible)
-                                Icons.Filled.VisibilityOff
-                            else
-                                Icons.Filled.Visibility,
-                            contentDescription = if (state.isPasswordVisible)
-                                "Ocultar contraseña" else "Mostrar contraseña"
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = SyncPassSurface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                border = BorderStroke(1.dp, SyncPassBorder)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Modern Gradient Logo Mark
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(SyncPassIndigo, SyncPassCyan)
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "SP",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Black
                         )
                     }
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { onLoginClick() }
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
 
-            Button(
-                onClick = onLoginClick,
-                enabled = state.canSubmit,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = "Portal SyncPass",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = SyncPassTextPrimary,
+                        letterSpacing = (-0.5).sp
                     )
-                } else {
-                    Text("Ingresar")
+
+                    Text(
+                        text = "Acreditación Territorial y Operaciones Offline",
+                        fontSize = 13.sp,
+                        color = SyncPassTextSecondary,
+                        modifier = Modifier.padding(top = 2.dp, bottom = 20.dp)
+                    )
+
+                    // Primary Cloud Action: AWS Cognito Button
+                    Button(
+                        onClick = onCognitoClick,
+                        enabled = !isCognitoLoading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = SyncPassSlate900,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        if (isCognitoLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(22.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "Continuar con Amazon Cognito",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
+                            }
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.padding(top = 8.dp, bottom = 18.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(SyncPassEmerald)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = "User Pool us-east-1_RlB8Ft9Z2 · PKCE",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = SyncPassEmerald
+                        )
+                    }
+
+                    HorizontalDivider(
+                        color = SyncPassBorder,
+                        thickness = 1.dp
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Evaluation Roles Section
+                    Text(
+                        text = "ACCESO DIRECTO POR ROL (EVALUACIÓN)",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SyncPassTextSecondary,
+                        letterSpacing = 0.5.sp,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    // 2x2 Interactive Modern Grid
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ModernRoleCard(
+                            title = "Docente",
+                            subtitle = "Quórum & QR",
+                            accentColor = SyncPassIndigo,
+                            bgColor = SyncPassIndigoLight,
+                            modifier = Modifier.weight(1f),
+                            onClick = { onLoginSuccess(JwtDecoder.createDemoToken("coordinator")) }
+                        )
+
+                        ModernRoleCard(
+                            title = "Voluntario",
+                            subtitle = "Escaneo Offline",
+                            accentColor = SyncPassEmerald,
+                            bgColor = SyncPassEmeraldLight,
+                            modifier = Modifier.weight(1f),
+                            onClick = { onLoginSuccess(JwtDecoder.createDemoToken("volunteer")) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ModernRoleCard(
+                            title = "Beneficiario",
+                            subtitle = "Pase & Encuesta",
+                            accentColor = SyncPassCyan,
+                            bgColor = SyncPassCyanLight,
+                            modifier = Modifier.weight(1f),
+                            onClick = { onLoginSuccess(JwtDecoder.createDemoToken("attendee")) }
+                        )
+
+                        ModernRoleCard(
+                            title = "Admin",
+                            subtitle = "Métricas RBAC",
+                            accentColor = SyncPassAmber,
+                            bgColor = SyncPassAmberLight,
+                            modifier = Modifier.weight(1f),
+                            onClick = { onLoginSuccess(JwtDecoder.createDemoToken("admin")) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Expand manual login form toggle
+                    Text(
+                        text = if (showManualForm) "Ocultar formulario manual" else "¿Ingresar con credenciales locales?",
+                        color = SyncPassIndigo,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                            .clickable { showManualForm = !showManualForm }
+                            .padding(vertical = 4.dp)
+                    )
+
+                    if (showManualForm) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        OutlinedTextField(
+                            value = state.username,
+                            onValueChange = viewModel::onUsernameChange,
+                            label = { Text("Correo institucional") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = state.password,
+                            onValueChange = viewModel::onPasswordChange,
+                            label = { Text("Contraseña") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(10.dp),
+                            visualTransformation = if (state.isPasswordVisible)
+                                VisualTransformation.None
+                            else
+                                PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = viewModel::onTogglePasswordVisibility) {
+                                    Icon(
+                                        imageVector = if (state.isPasswordVisible)
+                                            Icons.Filled.VisibilityOff
+                                        else
+                                            Icons.Filled.Visibility,
+                                        contentDescription = null
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Button(
+                            onClick = viewModel::onLoginClick,
+                            enabled = state.canSubmit,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = SyncPassIndigo),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp)
+                        ) {
+                            Text("Iniciar Sesión Local", fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
 
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 4.dp),
-                color = SyncPassBorder
-            )
-
-            // Botón Cognito Hosted UI (Paso 6 cognito-auth)
-            OutlinedButton(
-                onClick = onCognitoClick,
-                enabled = !isCognitoLoading,
+            // Bottom Server Telemetry
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                if (isCognitoLoading) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                } else {
-                    Text("Continuar con Amazon Cognito")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Sección de Acceso Rápido por Rol para Evaluación Académica
-            Text(
-                text = "ACCESO DIRECTO POR ROL (EVALUACIÓN)",
-                style = MaterialTheme.typography.labelSmall,
-                color = SyncPassTextSecondary
-            )
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = { onLoginSuccess(JwtDecoder.createDemoToken("coordinator")) },
-                        modifier = Modifier.weight(1f),
-                        border = BorderStroke(1.dp, SyncPassBluePrimary)
-                    ) {
-                        Text("Docente", color = SyncPassBluePrimary, style = MaterialTheme.typography.labelMedium)
-                    }
-
-                    OutlinedButton(
-                        onClick = { onLoginSuccess(JwtDecoder.createDemoToken("volunteer")) },
-                        modifier = Modifier.weight(1f),
-                        border = BorderStroke(1.dp, SyncPassBluePrimary)
-                    ) {
-                        Text("Voluntario", color = SyncPassBluePrimary, style = MaterialTheme.typography.labelMedium)
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = { onLoginSuccess(JwtDecoder.createDemoToken("attendee")) },
-                        modifier = Modifier.weight(1f),
-                        border = BorderStroke(1.dp, SyncPassBluePrimary)
-                    ) {
-                        Text("Beneficiario", color = SyncPassBluePrimary, style = MaterialTheme.typography.labelMedium)
-                    }
-
-                    OutlinedButton(
-                        onClick = { onLoginSuccess(JwtDecoder.createDemoToken("admin")) },
-                        modifier = Modifier.weight(1f),
-                        border = BorderStroke(1.dp, SyncPassBluePrimary)
-                    ) {
-                        Text("Admin", color = SyncPassBluePrimary, style = MaterialTheme.typography.labelMedium)
-                    }
-                }
+                Text(
+                    text = "API EC2: 54.164.69.142",
+                    fontSize = 11.sp,
+                    color = SyncPassTextSecondary
+                )
+                Text(
+                    text = "Duoc UC · Vinculación Territorial",
+                    fontSize = 11.sp,
+                    color = SyncPassTextSecondary
+                )
             }
         }
+
         SnackbarHost(hostState = snackbar)
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-private fun LoginContentPreview() {
-    KotlinloginTheme {
-        LoginContent(
-            state = LoginUiState(username = "docente@duocuc.cl", password = "Password123"),
-            onUsernameChange = {},
-            onPasswordChange = {},
-            onTogglePassword = {},
-            onLoginClick = {},
-            onErrorShown = {}
-        )
+private fun ModernRoleCard(
+    title: String,
+    subtitle: String,
+    accentColor: Color,
+    bgColor: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(SyncPassSurface)
+            .border(1.dp, SyncPassBorder, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(12.dp)
+    ) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(bgColor),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(accentColor)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = title,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = SyncPassTextPrimary
+            )
+
+            Text(
+                text = subtitle,
+                fontSize = 10.sp,
+                color = SyncPassTextSecondary
+            )
+        }
     }
 }
