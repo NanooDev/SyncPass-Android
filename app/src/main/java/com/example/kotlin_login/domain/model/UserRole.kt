@@ -29,10 +29,10 @@ enum class UserRole(val slug: String, val displayName: String, val description: 
     companion object {
         fun fromSlug(slug: String?): UserRole {
             return when (slug?.lowercase()) {
-                "coordinator", "docente", "profesor" -> DOCENTE
+                "coordinator", "coordinador", "docente", "profesor" -> DOCENTE
                 "volunteer", "voluntario" -> VOLUNTARIO
                 "attendee", "beneficiario" -> BENEFICIARIO
-                "admin", "superadmin" -> ADMIN
+                "admin", "administrador", "superadmin" -> ADMIN
                 else -> DOCENTE
             }
         }
