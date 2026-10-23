@@ -19,7 +19,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -32,20 +31,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.kotlin_login.domain.model.AsistenciaRegistro
 import com.example.kotlin_login.domain.model.UserRole
 import com.example.kotlin_login.ui.components.QrScannerView
 import com.example.kotlin_login.ui.components.SyncPassTopBar
 import com.example.kotlin_login.ui.theme.SyncPassAmber
-import com.example.kotlin_login.ui.theme.SyncPassAmberLight
-import com.example.kotlin_login.ui.theme.SyncPassBluePrimary
-import com.example.kotlin_login.ui.theme.SyncPassBorder
 import com.example.kotlin_login.ui.theme.SyncPassEmerald
-import com.example.kotlin_login.ui.theme.SyncPassEmeraldLight
-import com.example.kotlin_login.ui.theme.SyncPassTextPrimary
-import com.example.kotlin_login.ui.theme.SyncPassTextSecondary
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -71,12 +63,13 @@ fun VoluntarioScreen(
         topBar = {
             SyncPassTopBar(
                 title = "Acreditación en Terreno",
-                subtitle = "Estudiante Voluntario • Modo Operativo",
+                subtitle = "Estudiante Voluntario · Modo Operativo",
                 currentRole = UserRole.VOLUNTARIO,
                 onBackClick = onBackClick,
                 onLogoutClick = onLogoutClick
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -91,7 +84,7 @@ fun VoluntarioScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isOffline) SyncPassAmberLight else SyncPassEmeraldLight
+                        containerColor = if (isOffline) SyncPassAmber.copy(alpha = 0.12f) else SyncPassEmerald.copy(alpha = 0.12f)
                     ),
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
@@ -116,7 +109,7 @@ fun VoluntarioScreen(
                                     else
                                         "Sincronización en tiempo real habilitada",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = SyncPassTextPrimary
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Switch(
@@ -147,7 +140,7 @@ fun VoluntarioScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(SyncPassEmeraldLight, RoundedCornerShape(8.dp))
+                            .background(SyncPassEmerald.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
                             .border(1.dp, SyncPassEmerald, RoundedCornerShape(8.dp))
                             .padding(12.dp)
                     ) {
@@ -189,7 +182,7 @@ fun VoluntarioScreen(
                 Text(
                     text = "Acreditaciones Recientes (${asistencias.size})",
                     style = MaterialTheme.typography.titleSmall,
-                    color = SyncPassBluePrimary
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -197,8 +190,8 @@ fun VoluntarioScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, SyncPassBorder)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                 ) {
                     Row(
                         modifier = Modifier
@@ -211,33 +204,36 @@ fun VoluntarioScreen(
                             Text(
                                 text = item.nombreBeneficiario,
                                 style = MaterialTheme.typography.titleSmall,
-                                color = SyncPassTextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "RUT: ${item.rut} • Método: ${item.metodo}",
+                                text = "RUT: ${item.rut} · Método: ${item.metodo}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = SyncPassTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             val timeStr = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(item.timestamp))
                             Text(
                                 text = "Hora: $timeStr",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = SyncPassTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
+                        val isSync = item.sincronizado
+                        val badgeColor = if (isSync) SyncPassEmerald else SyncPassAmber
                         Box(
                             modifier = Modifier
                                 .background(
-                                    if (item.sincronizado) SyncPassEmeraldLight else SyncPassAmberLight,
+                                    badgeColor.copy(alpha = 0.12f),
                                     RoundedCornerShape(6.dp)
                                 )
+                                .border(1.dp, badgeColor.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(
-                                text = if (item.sincronizado) "Sincronizado" else "Pendiente",
+                                text = if (isSync) "Sincronizado" else "Pendiente",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = if (item.sincronizado) SyncPassEmerald else SyncPassAmber
+                                color = badgeColor
                             )
                         }
                     }

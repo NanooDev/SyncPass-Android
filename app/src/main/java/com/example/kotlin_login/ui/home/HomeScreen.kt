@@ -2,7 +2,6 @@ package com.example.kotlin_login.ui.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,18 +38,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kotlin_login.domain.model.UserRole
 import com.example.kotlin_login.ui.components.SyncPassTopBar
 import com.example.kotlin_login.ui.theme.SyncPassAmber
-import com.example.kotlin_login.ui.theme.SyncPassAmberLight
-import com.example.kotlin_login.ui.theme.SyncPassBackground
-import com.example.kotlin_login.ui.theme.SyncPassBorder
 import com.example.kotlin_login.ui.theme.SyncPassCyan
-import com.example.kotlin_login.ui.theme.SyncPassCyanLight
 import com.example.kotlin_login.ui.theme.SyncPassEmerald
-import com.example.kotlin_login.ui.theme.SyncPassEmeraldLight
 import com.example.kotlin_login.ui.theme.SyncPassIndigo
-import com.example.kotlin_login.ui.theme.SyncPassIndigoLight
-import com.example.kotlin_login.ui.theme.SyncPassSurface
-import com.example.kotlin_login.ui.theme.SyncPassTextPrimary
-import com.example.kotlin_login.ui.theme.SyncPassTextSecondary
 
 @Composable
 fun HomeScreen(
@@ -78,7 +69,7 @@ fun HomeScreen(
                 onLogoutClick = onLogout
             )
         },
-        containerColor = SyncPassBackground
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -92,8 +83,8 @@ fun HomeScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SyncPassSurface),
-                border = BorderStroke(1.dp, SyncPassBorder),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Row(
@@ -124,7 +115,7 @@ fun HomeScreen(
                             text = username,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = SyncPassTextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -140,7 +131,7 @@ fun HomeScreen(
                             Text(
                                 text = "Rol: ${detectedRole.displayName}",
                                 fontSize = 12.sp,
-                                color = SyncPassTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -151,7 +142,7 @@ fun HomeScreen(
                 text = "MÓDULOS DEL SISTEMA (RBAC)",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                color = SyncPassTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 letterSpacing = 0.5.sp,
                 modifier = Modifier.padding(top = 6.dp)
             )
@@ -162,7 +153,7 @@ fun HomeScreen(
                 subtitle = "Quórum en vivo y pases QR de taller",
                 badgeText = "Planificación",
                 accentColor = SyncPassIndigo,
-                bgColor = SyncPassIndigoLight,
+                bgColor = SyncPassIndigo.copy(alpha = 0.12f),
                 onClick = onNavigateToDocente
             )
 
@@ -172,7 +163,7 @@ fun HomeScreen(
                 subtitle = "Acreditación en terreno con modo offline",
                 badgeText = "Terreno",
                 accentColor = SyncPassEmerald,
-                bgColor = SyncPassEmeraldLight,
+                bgColor = SyncPassEmerald.copy(alpha = 0.12f),
                 onClick = onNavigateToVoluntario
             )
 
@@ -182,7 +173,7 @@ fun HomeScreen(
                 subtitle = "Credencial digital QR y encuesta de 30s",
                 badgeText = "Ciudadano",
                 accentColor = SyncPassCyan,
-                bgColor = SyncPassCyanLight,
+                bgColor = SyncPassCyan.copy(alpha = 0.12f),
                 onClick = onNavigateToBeneficiario
             )
 
@@ -192,7 +183,7 @@ fun HomeScreen(
                 subtitle = "Métricas institucionales y auditoría",
                 badgeText = "Gobierno",
                 accentColor = SyncPassAmber,
-                bgColor = SyncPassAmberLight,
+                bgColor = SyncPassAmber.copy(alpha = 0.12f),
                 onClick = onNavigateToAdmin
             )
 
@@ -201,14 +192,14 @@ fun HomeScreen(
             OutlinedButton(
                 onClick = onLogout,
                 shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, SyncPassBorder),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
             ) {
                 Text(
                     text = "Cerrar Sesión Activa",
-                    color = SyncPassTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -230,8 +221,8 @@ private fun ModernRoleNavCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SyncPassSurface),
-        border = BorderStroke(1.dp, SyncPassBorder),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
@@ -267,7 +258,7 @@ private fun ModernRoleNavCard(
                         text = title,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = SyncPassTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Box(
                         modifier = Modifier
@@ -289,7 +280,7 @@ private fun ModernRoleNavCard(
                 Text(
                     text = subtitle,
                     fontSize = 12.sp,
-                    color = SyncPassTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

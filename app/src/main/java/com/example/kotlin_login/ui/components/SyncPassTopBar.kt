@@ -13,7 +13,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,14 +33,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.kotlin_login.domain.model.UserRole
-import com.example.kotlin_login.ui.theme.SyncPassBorder
 import com.example.kotlin_login.ui.theme.SyncPassCyan
 import com.example.kotlin_login.ui.theme.SyncPassEmerald
 import com.example.kotlin_login.ui.theme.SyncPassIndigo
-import com.example.kotlin_login.ui.theme.SyncPassIndigoLight
-import com.example.kotlin_login.ui.theme.SyncPassSurface
-import com.example.kotlin_login.ui.theme.SyncPassTextPrimary
-import com.example.kotlin_login.ui.theme.SyncPassTextSecondary
+import com.example.kotlin_login.ui.theme.ThemeState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +79,7 @@ fun SyncPassTopBar(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = (-0.3).sp
                         ),
-                        color = SyncPassTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -94,7 +92,7 @@ fun SyncPassTopBar(
                         Text(
                             text = subtitle ?: "EC2: 54.164.69.142",
                             style = MaterialTheme.typography.labelSmall,
-                            color = SyncPassTextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -106,7 +104,7 @@ fun SyncPassTopBar(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = SyncPassTextPrimary
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -116,32 +114,43 @@ fun SyncPassTopBar(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(999.dp))
-                        .background(SyncPassIndigoLight)
-                        .border(1.dp, SyncPassIndigo.copy(alpha = 0.25f), RoundedCornerShape(999.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(999.dp))
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = currentRole.displayName.split("/").first().trim(),
-                        color = SyncPassIndigo,
+                        color = MaterialTheme.colorScheme.primary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
+            // Alternador de Modo Claro / Modo Oscuro
+            IconButton(
+                onClick = { ThemeState.toggle() }
+            ) {
+                Icon(
+                    imageVector = if (ThemeState.isDarkTheme) Icons.Filled.LightMode else Icons.Filled.DarkMode,
+                    contentDescription = if (ThemeState.isDarkTheme) "Cambiar a Modo Claro" else "Cambiar a Modo Oscuro",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             if (onLogoutClick != null) {
                 IconButton(onClick = onLogoutClick) {
                     Icon(
-                        imageVector = Icons.Filled.ExitToApp,
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                         contentDescription = "Cerrar sesión",
-                        tint = SyncPassTextSecondary
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = SyncPassSurface
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        modifier = Modifier.border(0.5.dp, SyncPassBorder)
+        modifier = Modifier.border(0.5.dp, MaterialTheme.colorScheme.outline)
     )
 }

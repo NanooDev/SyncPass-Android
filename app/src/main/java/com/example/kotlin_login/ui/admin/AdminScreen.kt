@@ -22,17 +22,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.kotlin_login.domain.model.UserRole
 import com.example.kotlin_login.ui.components.SyncPassTopBar
-import com.example.kotlin_login.ui.theme.SyncPassBlueLight
-import com.example.kotlin_login.ui.theme.SyncPassBluePrimary
-import com.example.kotlin_login.ui.theme.SyncPassBorder
 import com.example.kotlin_login.ui.theme.SyncPassEmerald
-import com.example.kotlin_login.ui.theme.SyncPassEmeraldLight
-import com.example.kotlin_login.ui.theme.SyncPassTextPrimary
-import com.example.kotlin_login.ui.theme.SyncPassTextSecondary
 
 private data class AdminMetric(val label: String, val value: String, val detail: String)
 private data class SystemUser(val email: String, val role: String, val status: String)
@@ -65,7 +58,8 @@ fun AdminScreen(
                 onBackClick = onBackClick,
                 onLogoutClick = onLogoutClick
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -78,7 +72,7 @@ fun AdminScreen(
                 Text(
                     text = "Métricas Institucionales de Impacto",
                     style = MaterialTheme.typography.titleMedium,
-                    color = SyncPassBluePrimary
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -94,24 +88,24 @@ fun AdminScreen(
                                 Card(
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(10.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, SyncPassBorder)
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                                 ) {
                                     Column(modifier = Modifier.padding(12.dp)) {
                                         Text(
                                             text = metric.value,
                                             style = MaterialTheme.typography.headlineMedium,
-                                            color = SyncPassBluePrimary
+                                            color = MaterialTheme.colorScheme.primary
                                         )
                                         Text(
                                             text = metric.label,
                                             style = MaterialTheme.typography.labelMedium,
-                                            color = SyncPassTextPrimary
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                         Text(
                                             text = metric.detail,
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = SyncPassTextSecondary
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
@@ -126,7 +120,7 @@ fun AdminScreen(
                 Text(
                     text = "Gestión de Accesos y Roles de Usuario (RBAC)",
                     style = MaterialTheme.typography.titleMedium,
-                    color = SyncPassBluePrimary
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -134,8 +128,8 @@ fun AdminScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, SyncPassBorder)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                 ) {
                     Row(
                         modifier = Modifier
@@ -148,17 +142,18 @@ fun AdminScreen(
                             Text(
                                 text = user.email,
                                 style = MaterialTheme.typography.titleSmall,
-                                color = SyncPassTextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = "Rol asignado: ${user.role}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = SyncPassTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         Box(
                             modifier = Modifier
-                                .background(SyncPassEmeraldLight, RoundedCornerShape(6.dp))
+                                .background(SyncPassEmerald.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
+                                .border(1.dp, SyncPassEmerald.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(

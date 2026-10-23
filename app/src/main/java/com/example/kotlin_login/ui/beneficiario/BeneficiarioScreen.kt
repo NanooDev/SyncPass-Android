@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -31,20 +30,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.kotlin_login.domain.model.UserRole
 import com.example.kotlin_login.ui.components.QrCodeView
 import com.example.kotlin_login.ui.components.SyncPassTopBar
-import com.example.kotlin_login.ui.theme.SyncPassAmber
-import com.example.kotlin_login.ui.theme.SyncPassBlueLight
-import com.example.kotlin_login.ui.theme.SyncPassBluePrimary
-import com.example.kotlin_login.ui.theme.SyncPassBorder
 import com.example.kotlin_login.ui.theme.SyncPassEmerald
-import com.example.kotlin_login.ui.theme.SyncPassEmeraldLight
-import com.example.kotlin_login.ui.theme.SyncPassSurfaceVariant
-import com.example.kotlin_login.ui.theme.SyncPassTextPrimary
-import com.example.kotlin_login.ui.theme.SyncPassTextSecondary
 
 @Composable
 fun BeneficiarioScreen(
@@ -65,7 +55,8 @@ fun BeneficiarioScreen(
                 onBackClick = onBackClick,
                 onLogoutClick = onLogoutClick
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -86,30 +77,30 @@ fun BeneficiarioScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SyncPassBorder)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "Actividad Comunitaria Asignada",
                         style = MaterialTheme.typography.titleSmall,
-                        color = SyncPassBluePrimary
+                        color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "Alfabetización Digital para Adultos Mayores",
                         style = MaterialTheme.typography.titleMedium,
-                        color = SyncPassTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "Sede: Junta de Vecinos N°14 Villa El Roble",
                         style = MaterialTheme.typography.bodySmall,
-                        color = SyncPassTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = "Horario: Hoy de 15:00 a 17:30 hrs",
                         style = MaterialTheme.typography.bodySmall,
-                        color = SyncPassTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -118,19 +109,19 @@ fun BeneficiarioScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SyncPassBorder)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "Encuesta Inmediata de Impacto y Calidad",
                         style = MaterialTheme.typography.titleSmall,
-                        color = SyncPassBluePrimary
+                        color = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         text = "Su opinión permite a Duoc UC perfeccionar las futuras iniciativas comunitarias.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = SyncPassTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -138,7 +129,7 @@ fun BeneficiarioScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(SyncPassEmeraldLight, RoundedCornerShape(8.dp))
+                                .background(SyncPassEmerald.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
                                 .border(1.dp, SyncPassEmerald, RoundedCornerShape(8.dp))
                                 .padding(16.dp),
                             contentAlignment = Alignment.Center
@@ -153,16 +144,16 @@ fun BeneficiarioScreen(
                                 Text(
                                     text = "Agradecemos su participación en esta jornada territorial.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = SyncPassTextPrimary
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
                     } else {
-                        // Calificación General (Selector 1 a 5 numérico y limpio, sin emojis)
+                        // Calificación General (Selector 1 a 5 numérico)
                         Text(
                             text = "Calificación general del taller (1 a 5):",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = SyncPassTextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(
@@ -176,12 +167,12 @@ fun BeneficiarioScreen(
                                         .weight(1f)
                                         .height(40.dp)
                                         .background(
-                                            if (isSelected) SyncPassBlueLight else SyncPassSurfaceVariant,
+                                            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
                                             RoundedCornerShape(8.dp)
                                         )
                                         .border(
                                             1.dp,
-                                            if (isSelected) SyncPassBluePrimary else SyncPassBorder,
+                                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                                             RoundedCornerShape(8.dp)
                                         )
                                         .clickable { rating = star },
@@ -190,7 +181,7 @@ fun BeneficiarioScreen(
                                     Text(
                                         text = "$star",
                                         style = MaterialTheme.typography.titleSmall,
-                                        color = if (isSelected) SyncPassBluePrimary else SyncPassTextSecondary
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -202,7 +193,7 @@ fun BeneficiarioScreen(
                         Text(
                             text = "¿Qué tan útil resultó el contenido entregado?:",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = SyncPassTextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(
@@ -216,12 +207,12 @@ fun BeneficiarioScreen(
                                         .weight(1f)
                                         .height(36.dp)
                                         .background(
-                                            if (isSelected) SyncPassBlueLight else SyncPassSurfaceVariant,
+                                            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
                                             RoundedCornerShape(6.dp)
                                         )
                                         .border(
                                             1.dp,
-                                            if (isSelected) SyncPassBluePrimary else SyncPassBorder,
+                                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                                             RoundedCornerShape(6.dp)
                                         )
                                         .clickable { utilityLevel = value },
@@ -230,7 +221,7 @@ fun BeneficiarioScreen(
                                     Text(
                                         text = label,
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = if (isSelected) SyncPassBluePrimary else SyncPassTextSecondary
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }

@@ -37,10 +37,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.kotlin_login.ui.theme.SyncPassBluePrimary
-import com.example.kotlin_login.ui.theme.SyncPassBorder
-import com.example.kotlin_login.ui.theme.SyncPassEmerald
-import com.example.kotlin_login.ui.theme.SyncPassTextSecondary
 
 /**
  * Componente modular para generación y visualización de Códigos QR en Jetpack Compose.
@@ -55,7 +51,8 @@ fun QrCodeView(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -65,16 +62,16 @@ fun QrCodeView(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
-                color = SyncPassBluePrimary
+                color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Canvas de QR 15x15 matemático determinístico según el hash de data
+            // Canvas de QR 15x15 determinístico según el hash de data (fondo blanco para lectura óptima)
             Box(
                 modifier = Modifier
                     .size(180.dp)
                     .background(Color.White)
-                    .border(1.dp, SyncPassBorder, RoundedCornerShape(8.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
                     .padding(8.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -107,7 +104,7 @@ fun QrCodeView(
             Text(
                 text = data,
                 style = MaterialTheme.typography.labelSmall,
-                color = SyncPassTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -138,6 +135,7 @@ fun QrScannerView(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -147,12 +145,12 @@ fun QrScannerView(
             Text(
                 text = "Lector de Acreditación QR",
                 style = MaterialTheme.typography.titleMedium,
-                color = SyncPassBluePrimary
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = "Alinee el código QR del pase dentro del visor de enfoque",
                 style = MaterialTheme.typography.bodySmall,
-                color = SyncPassTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -161,7 +159,7 @@ fun QrScannerView(
                 modifier = Modifier
                     .size(200.dp)
                     .background(Color(0xFF0F172A), RoundedCornerShape(8.dp))
-                    .border(2.dp, SyncPassBluePrimary, RoundedCornerShape(8.dp)),
+                    .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(modifier = Modifier.size(190.dp)) {
@@ -176,7 +174,7 @@ fun QrScannerView(
 
                     // Superior derecha
                     drawLine(c, Offset(size.width, 0f), Offset(size.width - cornerLen, 0f), strokeW)
-                    drawLine(c, Offset(size.width, 0f), Offset(size.width, cornerLen), strokeW)
+                    drawLine(c, Offset(size.width, 0f), Offset(size.width - cornerLen, 0f), strokeW)
 
                     // Inferior izquierda
                     drawLine(c, Offset(0f, size.height), Offset(cornerLen, size.height), strokeW)

@@ -29,19 +29,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.kotlin_login.domain.model.TallerEvento
 import com.example.kotlin_login.domain.model.UserRole
 import com.example.kotlin_login.ui.components.QrCodeView
 import com.example.kotlin_login.ui.components.SyncPassTopBar
-import com.example.kotlin_login.ui.theme.SyncPassBlueLight
-import com.example.kotlin_login.ui.theme.SyncPassBluePrimary
-import com.example.kotlin_login.ui.theme.SyncPassBorder
 import com.example.kotlin_login.ui.theme.SyncPassEmerald
-import com.example.kotlin_login.ui.theme.SyncPassEmeraldLight
-import com.example.kotlin_login.ui.theme.SyncPassTextPrimary
-import com.example.kotlin_login.ui.theme.SyncPassTextSecondary
 
 private val DEMO_TALLERES = listOf(
     TallerEvento(
@@ -85,18 +78,18 @@ fun DocenteScreen(
     onLogoutClick: () -> Unit
 ) {
     var selectedTaller by remember { mutableStateOf(DEMO_TALLERES.first()) }
-    var showQrDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             SyncPassTopBar(
                 title = "Coordinación y Docencia",
-                subtitle = "Vinculación con el Medio • Duoc UC",
+                subtitle = "Vinculación con el Medio · Duoc UC",
                 currentRole = UserRole.DOCENTE,
                 onBackClick = onBackClick,
                 onLogoutClick = onLogoutClick
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -109,19 +102,20 @@ fun DocenteScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = "Resumen de Actividades Territoriales",
                             style = MaterialTheme.typography.titleMedium,
-                            color = SyncPassBluePrimary
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = "Seleccione un taller para consultar quórum o generar código QR de acreditación.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = SyncPassTextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -134,12 +128,12 @@ fun DocenteScreen(
                         .fillMaxWidth()
                         .border(
                             width = if (isSelected) 2.dp else 1.dp,
-                            color = if (isSelected) SyncPassBluePrimary else SyncPassBorder,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                             shape = RoundedCornerShape(12.dp)
                         )
                         .clickable { selectedTaller = taller },
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -148,24 +142,27 @@ fun DocenteScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            val isEnCurso = taller.estado == "En curso"
+                            val badgeColor = if (isEnCurso) SyncPassEmerald else MaterialTheme.colorScheme.primary
                             Box(
                                 modifier = Modifier
                                     .background(
-                                        if (taller.estado == "En curso") SyncPassEmeraldLight else SyncPassBlueLight,
+                                        badgeColor.copy(alpha = 0.12f),
                                         RoundedCornerShape(8.dp)
                                     )
+                                    .border(1.dp, badgeColor.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
                                     .padding(horizontal = 8.dp, vertical = 2.dp)
                             ) {
                                 Text(
                                     text = taller.estado,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = if (taller.estado == "En curso") SyncPassEmerald else SyncPassBluePrimary
+                                    color = badgeColor
                                 )
                             }
                             Text(
                                 text = taller.fechaHora,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = SyncPassTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -173,12 +170,12 @@ fun DocenteScreen(
                         Text(
                             text = taller.nombre,
                             style = MaterialTheme.typography.titleSmall,
-                            color = SyncPassTextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "Lugar: ${taller.lugar}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = SyncPassTextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -188,8 +185,8 @@ fun DocenteScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(6.dp),
-                            color = SyncPassBluePrimary,
-                            trackColor = SyncPassBorder
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.outline
                         )
 
                         Spacer(modifier = Modifier.height(6.dp))
@@ -200,12 +197,12 @@ fun DocenteScreen(
                             Text(
                                 text = "Acreditados: ${taller.cuposOcupados} / ${taller.cuposMaximos}",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = SyncPassTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
                                 text = "${(progress * 100).toInt()}% Quórum",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = SyncPassBluePrimary
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }

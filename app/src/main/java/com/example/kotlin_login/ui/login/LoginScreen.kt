@@ -18,10 +18,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -33,7 +33,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -51,8 +50,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -60,20 +57,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kotlin_login.core.jwt.JwtDecoder
 import com.example.kotlin_login.ui.theme.SyncPassAmber
-import com.example.kotlin_login.ui.theme.SyncPassAmberLight
-import com.example.kotlin_login.ui.theme.SyncPassBackground
-import com.example.kotlin_login.ui.theme.SyncPassBorder
 import com.example.kotlin_login.ui.theme.SyncPassCyan
-import com.example.kotlin_login.ui.theme.SyncPassCyanLight
 import com.example.kotlin_login.ui.theme.SyncPassEmerald
-import com.example.kotlin_login.ui.theme.SyncPassEmeraldLight
 import com.example.kotlin_login.ui.theme.SyncPassIndigo
-import com.example.kotlin_login.ui.theme.SyncPassIndigoLight
-import com.example.kotlin_login.ui.theme.SyncPassSlate800
-import com.example.kotlin_login.ui.theme.SyncPassSlate900
-import com.example.kotlin_login.ui.theme.SyncPassSurface
-import com.example.kotlin_login.ui.theme.SyncPassTextPrimary
-import com.example.kotlin_login.ui.theme.SyncPassTextSecondary
+import com.example.kotlin_login.ui.theme.ThemeState
 
 @Composable
 fun LoginScreen(
@@ -103,7 +90,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SyncPassBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(20.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -117,9 +104,9 @@ fun LoginScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = SyncPassSurface),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                border = BorderStroke(1.dp, SyncPassBorder)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Column(
                     modifier = Modifier
@@ -127,24 +114,39 @@ fun LoginScreen(
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Modern Gradient Logo Mark
-                    Box(
-                        modifier = Modifier
-                            .size(54.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(
-                                Brush.linearGradient(
-                                    listOf(SyncPassIndigo, SyncPassCyan)
+                    // Header Bar with Centered Logo and Right-aligned Theme Toggle
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Box(
+                            modifier = Modifier
+                                .size(54.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(SyncPassIndigo, SyncPassCyan)
+                                    )
                                 )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "SP",
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Black
-                        )
+                                .align(Alignment.Center),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "SP",
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
+
+                        // Theme Toggle Icon
+                        IconButton(
+                            onClick = { ThemeState.toggle() },
+                            modifier = Modifier.align(Alignment.CenterEnd)
+                        ) {
+                            Icon(
+                                imageVector = if (ThemeState.isDarkTheme) Icons.Filled.LightMode else Icons.Filled.DarkMode,
+                                contentDescription = if (ThemeState.isDarkTheme) "Cambiar a Modo Claro" else "Cambiar a Modo Oscuro",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
@@ -153,14 +155,14 @@ fun LoginScreen(
                         text = "Portal SyncPass",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = SyncPassTextPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         letterSpacing = (-0.5).sp
                     )
 
                     Text(
                         text = "Acreditación Territorial y Operaciones Offline",
                         fontSize = 13.sp,
-                        color = SyncPassTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 2.dp, bottom = 20.dp)
                     )
 
@@ -173,13 +175,13 @@ fun LoginScreen(
                             .height(52.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = SyncPassSlate900,
-                            contentColor = Color.White
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     ) {
                         if (isCognitoLoading) {
                             CircularProgressIndicator(
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(22.dp),
                                 strokeWidth = 2.dp
                             )
@@ -217,7 +219,7 @@ fun LoginScreen(
                     }
 
                     HorizontalDivider(
-                        color = SyncPassBorder,
+                        color = MaterialTheme.colorScheme.outline,
                         thickness = 1.dp
                     )
 
@@ -228,7 +230,7 @@ fun LoginScreen(
                         text = "ACCESO DIRECTO POR ROL (EVALUACIÓN)",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = SyncPassTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         letterSpacing = 0.5.sp,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
@@ -242,7 +244,7 @@ fun LoginScreen(
                             title = "Docente",
                             subtitle = "Quórum & QR",
                             accentColor = SyncPassIndigo,
-                            bgColor = SyncPassIndigoLight,
+                            bgColor = SyncPassIndigo.copy(alpha = 0.12f),
                             modifier = Modifier.weight(1f),
                             onClick = { onLoginSuccess(JwtDecoder.createDemoToken("coordinator")) }
                         )
@@ -251,7 +253,7 @@ fun LoginScreen(
                             title = "Voluntario",
                             subtitle = "Escaneo Offline",
                             accentColor = SyncPassEmerald,
-                            bgColor = SyncPassEmeraldLight,
+                            bgColor = SyncPassEmerald.copy(alpha = 0.12f),
                             modifier = Modifier.weight(1f),
                             onClick = { onLoginSuccess(JwtDecoder.createDemoToken("volunteer")) }
                         )
@@ -267,7 +269,7 @@ fun LoginScreen(
                             title = "Beneficiario",
                             subtitle = "Pase & Encuesta",
                             accentColor = SyncPassCyan,
-                            bgColor = SyncPassCyanLight,
+                            bgColor = SyncPassCyan.copy(alpha = 0.12f),
                             modifier = Modifier.weight(1f),
                             onClick = { onLoginSuccess(JwtDecoder.createDemoToken("attendee")) }
                         )
@@ -276,7 +278,7 @@ fun LoginScreen(
                             title = "Admin",
                             subtitle = "Métricas RBAC",
                             accentColor = SyncPassAmber,
-                            bgColor = SyncPassAmberLight,
+                            bgColor = SyncPassAmber.copy(alpha = 0.12f),
                             modifier = Modifier.weight(1f),
                             onClick = { onLoginSuccess(JwtDecoder.createDemoToken("admin")) }
                         )
@@ -287,7 +289,7 @@ fun LoginScreen(
                     // Expand manual login form toggle
                     Text(
                         text = if (showManualForm) "Ocultar formulario manual" else "¿Ingresar con credenciales locales?",
-                        color = SyncPassIndigo,
+                        color = MaterialTheme.colorScheme.primary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier
@@ -338,7 +340,7 @@ fun LoginScreen(
                             onClick = viewModel::onLoginClick,
                             enabled = state.canSubmit,
                             shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = SyncPassIndigo),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(44.dp)
@@ -361,12 +363,12 @@ fun LoginScreen(
                 Text(
                     text = "API EC2: 54.164.69.142",
                     fontSize = 11.sp,
-                    color = SyncPassTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = "Duoc UC · Vinculación Territorial",
                     fontSize = 11.sp,
-                    color = SyncPassTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -387,8 +389,8 @@ private fun ModernRoleCard(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(SyncPassSurface)
-            .border(1.dp, SyncPassBorder, RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(12.dp)
     ) {
@@ -414,13 +416,13 @@ private fun ModernRoleCard(
                 text = title,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                color = SyncPassTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
                 text = subtitle,
                 fontSize = 10.sp,
-                color = SyncPassTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
