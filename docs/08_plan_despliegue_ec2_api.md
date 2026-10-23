@@ -51,7 +51,7 @@ En tu terminal local de PowerShell o consola:
 chmod 400 syncpass-key.pem
 
 # Conexión al servidor EC2
-ssh -i "syncpass-key.pem" ubuntu@<TU_IP_PUBLICA_EC2>
+ssh -i "syncpass-key.pem" ubuntu@54.204.137.182
 ```
 
 Una vez dentro del servidor Ubuntu:
@@ -165,6 +165,6 @@ sudo systemctl restart nginx
 Desde tu computadora local, ejecuta en el navegador o en PowerShell:
 ```powershell
 # Probar endpoint de salud
-Invoke-RestMethod -Uri "http://<TU_IP_PUBLICA_EC2>/api/users"
+Invoke-RestMethod -Uri "http://54.204.137.182/api/users"
 ```
 Si devuelve el listado JSON o el código de respuesta esperado, el despliegue está 100% operativo.
