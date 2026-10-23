@@ -67,7 +67,8 @@ fun LoginScreen(
     viewModel: LoginViewModel = viewModel(),
     isCognitoLoading: Boolean = false,
     onCognitoClick: () -> Unit = {},
-    onLoginSuccess: (token: String) -> Unit = {}
+    onLoginSuccess: (token: String) -> Unit = {},
+    onRoleSelected: ((token: String, targetRoute: String) -> Unit)? = null
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbar = remember { SnackbarHostState() }
@@ -229,7 +230,14 @@ fun LoginScreen(
                             accentColor = SyncPassIndigo,
                             bgColor = SyncPassIndigo.copy(alpha = 0.12f),
                             modifier = Modifier.weight(1f),
-                            onClick = { onLoginSuccess(JwtDecoder.createDemoToken("coordinator")) }
+                            onClick = {
+                                val token = JwtDecoder.createDemoToken("coordinator")
+                                if (onRoleSelected != null) {
+                                    onRoleSelected(token, "docente")
+                                } else {
+                                    onLoginSuccess(token)
+                                }
+                            }
                         )
 
                         ModernRoleCard(
@@ -238,7 +246,14 @@ fun LoginScreen(
                             accentColor = SyncPassEmerald,
                             bgColor = SyncPassEmerald.copy(alpha = 0.12f),
                             modifier = Modifier.weight(1f),
-                            onClick = { onLoginSuccess(JwtDecoder.createDemoToken("volunteer")) }
+                            onClick = {
+                                val token = JwtDecoder.createDemoToken("volunteer")
+                                if (onRoleSelected != null) {
+                                    onRoleSelected(token, "voluntario")
+                                } else {
+                                    onLoginSuccess(token)
+                                }
+                            }
                         )
                     }
 
@@ -254,7 +269,14 @@ fun LoginScreen(
                             accentColor = SyncPassCyan,
                             bgColor = SyncPassCyan.copy(alpha = 0.12f),
                             modifier = Modifier.weight(1f),
-                            onClick = { onLoginSuccess(JwtDecoder.createDemoToken("attendee")) }
+                            onClick = {
+                                val token = JwtDecoder.createDemoToken("attendee")
+                                if (onRoleSelected != null) {
+                                    onRoleSelected(token, "beneficiario")
+                                } else {
+                                    onLoginSuccess(token)
+                                }
+                            }
                         )
 
                         ModernRoleCard(
@@ -263,7 +285,14 @@ fun LoginScreen(
                             accentColor = SyncPassAmber,
                             bgColor = SyncPassAmber.copy(alpha = 0.12f),
                             modifier = Modifier.weight(1f),
-                            onClick = { onLoginSuccess(JwtDecoder.createDemoToken("admin")) }
+                            onClick = {
+                                val token = JwtDecoder.createDemoToken("admin")
+                                if (onRoleSelected != null) {
+                                    onRoleSelected(token, "admin")
+                                } else {
+                                    onLoginSuccess(token)
+                                }
+                            }
                         )
                     }
 

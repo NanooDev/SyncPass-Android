@@ -40,6 +40,13 @@ fun AppNavHost(
                     navController.navigate(AppScreen.Home.route) {
                         popUpTo(AppScreen.Login.route) { inclusive = true }
                     }
+                },
+                onRoleSelected = { newToken, targetRoute ->
+                    onLoginSuccess(newToken)
+                    navController.navigate(AppScreen.Home.route) {
+                        popUpTo(AppScreen.Login.route) { inclusive = true }
+                    }
+                    navController.navigate(targetRoute)
                 }
             )
         }
