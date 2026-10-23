@@ -45,6 +45,7 @@ android {
         buildConfigField("String", "COGNITO_REDIRECT_URI", "\"$cognitoRedirect\"")
         buildConfigField("String", "COGNITO_LOGOUT_URI", "\"$cognitoLogout\"")
         buildConfigField("String", "COGNITO_SCOPES", "\"$cognitoScopes\"")
+        buildConfigField("String", "NTFY_BASE_URL", "\"https://ntfy.sh\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

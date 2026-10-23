@@ -1,5 +1,7 @@
 package com.example.kotlin_login
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -22,6 +24,8 @@ import androidx.navigation.compose.rememberNavController
 import com.cognitoauth.CognitoAuthManager
 import com.cognitoauth.CognitoAuthViewModel
 import com.example.kotlin_login.core.config.CognitoAppConfig
+import com.example.kotlin_login.core.jwt.JwtDecoder
+import com.example.kotlin_login.feature.notificaciones.NotificationService
 import com.example.kotlin_login.ui.navigation.AppNavHost
 import com.example.kotlin_login.ui.navigation.AppScreen
 import com.example.kotlin_login.ui.theme.KotlinloginTheme
@@ -56,8 +60,15 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { cognitoVm.onLogoutCompleted() }
 
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* Permiso concedido o denegado por el usuario */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
         if (!CognitoAppConfig.isConfigured) {
             Toast.makeText(
                 this,
@@ -71,6 +82,19 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 var token: String? by rememberSaveable { mutableStateOf<String?>(null) }
                 val cognitoState by cognitoVm.uiState.collectAsState()
+
+                // Sincronizar servicio en segundo plano de notificaciones push ntfy.sh
+                LaunchedEffect(token) {
+                    val currentToken = token
+                    if (!currentToken.isNullOrBlank()) {
+                        val sessionUser = JwtDecoder.decode(currentToken).getOrNull()
+                        val email = sessionUser?.username?.takeUnless { it.isBlank() }
+                            ?: "profesor.coordinador@duocuc.cl"
+                        NotificationService.start(this@MainActivity, email)
+                    } else {
+                        NotificationService.stop(this@MainActivity)
+                    }
+                }
 
                 // Intents pendientes de Cognito para abrir Custom Tabs en el navegador
                 LaunchedEffect(cognitoState.pendingAuthIntent) {
@@ -109,6 +133,7 @@ class MainActivity : ComponentActivity() {
                         token = newToken
                     },
                     onLogout = {
+                        NotificationService.stop(this@MainActivity)
                         token = null
                         if (cognitoState.tokens != null) {
                             cognitoVm.startLogout()
