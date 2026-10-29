@@ -37,16 +37,23 @@ fun AppNavHost(
                 onCognitoClick = onCognitoClick,
                 onLoginSuccess = { newToken ->
                     onLoginSuccess(newToken)
-                    navController.navigate(AppScreen.Home.route) {
+                    val user = com.example.kotlin_login.core.jwt.JwtDecoder.decode(newToken).getOrNull()
+                    val targetRoute = when (user?.roles?.firstOrNull()?.lowercase()) {
+                        "coordinator", "docente" -> AppScreen.Docente.route
+                        "volunteer", "voluntario" -> AppScreen.Voluntario.route
+                        "attendee", "beneficiario", "alumno", "estudiante" -> AppScreen.Beneficiario.route
+                        "admin", "administrador" -> AppScreen.Admin.route
+                        else -> AppScreen.Docente.route
+                    }
+                    navController.navigate(targetRoute) {
                         popUpTo(AppScreen.Login.route) { inclusive = true }
                     }
                 },
                 onRoleSelected = { newToken, targetRoute ->
                     onLoginSuccess(newToken)
-                    navController.navigate(AppScreen.Home.route) {
+                    navController.navigate(targetRoute) {
                         popUpTo(AppScreen.Login.route) { inclusive = true }
                     }
-                    navController.navigate(targetRoute)
                 }
             )
         }
