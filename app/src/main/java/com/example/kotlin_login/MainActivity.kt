@@ -113,11 +113,19 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Al completar auth en Cognito con éxito, sincronizar token y navegar a Home
+                // Al completar auth en Cognito con éxito, sincronizar token y navegar directo al rol del usuario (sin pedir rol dos veces)
                 LaunchedEffect(cognitoState.tokens) {
                     cognitoState.tokens?.accessToken?.let { cognitoToken ->
                         token = cognitoToken
-                        navController.navigate(AppScreen.Home.route) {
+                        val user = JwtDecoder.decode(cognitoToken).getOrNull()
+                        val targetRoute = when (user?.roles?.firstOrNull()?.lowercase()) {
+                            "coordinator", "docente" -> AppScreen.Docente.route
+                            "volunteer", "voluntario" -> AppScreen.Voluntario.route
+                            "attendee", "beneficiario", "alumno", "estudiante" -> AppScreen.Beneficiario.route
+                            "admin", "administrador" -> AppScreen.Admin.route
+                            else -> AppScreen.Docente.route
+                        }
+                        navController.navigate(targetRoute) {
                             popUpTo(AppScreen.Login.route) { inclusive = true }
                         }
                     }

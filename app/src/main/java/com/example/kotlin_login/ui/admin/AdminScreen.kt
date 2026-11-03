@@ -21,10 +21,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -33,8 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.kotlin_login.domain.model.UserRole
+import com.example.kotlin_login.data.repository.RemoteUserItem
+import com.example.kotlin_login.data.repository.TallerRemoteRepository
 import com.example.kotlin_login.feature.notificaciones.NtfySender
 import com.example.kotlin_login.feature.notificaciones.NtfyTopics
 import com.example.kotlin_login.ui.components.SyncPassTopBar
@@ -42,21 +45,6 @@ import com.example.kotlin_login.ui.theme.SyncPassEmerald
 import kotlinx.coroutines.launch
 
 private data class AdminMetric(val label: String, val value: String, val detail: String)
-private data class SystemUser(val email: String, val role: String, val status: String)
-
-private val DEMO_METRICS = listOf(
-    AdminMetric("Proyectos Activos", "3", "En 3 comunas metropolitanas"),
-    AdminMetric("Talleres Realizados", "12", "Semestre en curso"),
-    AdminMetric("Asistencias Registradas", "128", "Mediante pases QR"),
-    AdminMetric("Tasa de Satisfacción", "94%", "Promedio en encuestas")
-)
-
-private val DEMO_USERS = listOf(
-    SystemUser("docente.coordinador@duocuc.cl", "Docente / Coordinador", "Activo"),
-    SystemUser("voluntario.estudiante@duocuc.cl", "Estudiante Voluntario", "Activo"),
-    SystemUser("maria.gonzalez@comunidad.cl", "Beneficiario Comunitario", "Activo"),
-    SystemUser("admin.syncpass@duocuc.cl", "Administrador General", "Activo")
-)
 
 @Composable
 fun AdminScreen(
@@ -65,7 +53,45 @@ fun AdminScreen(
 ) {
     var isSendingNotification by remember { mutableStateOf(false) }
     var notificationFeedback by remember { mutableStateOf<String?>(null) }
+    var isSyncing by remember { mutableStateOf(false) }
+    var talleresActivosCount by remember { mutableIntStateOf(3) }
+    var usersList by remember {
+        mutableStateOf(
+            listOf(
+                RemoteUserItem("usr-1", "Administrador SyncPass", "admin.syncpass@duocuc.cl", "Administrador General", true),
+                RemoteUserItem("usr-2", "Prof. Mariano Acevedo", "docente.coordinador@duocuc.cl", "Docente / Coordinador", true),
+                RemoteUserItem("usr-3", "Álvaro León", "voluntario.estudiante@duocuc.cl", "Estudiante Voluntario", true),
+                RemoteUserItem("usr-4", "María González", "maria.gonzalez@comunidad.cl", "Beneficiario Comunitario", true)
+            )
+        )
+    }
     val coroutineScope = rememberCoroutineScope()
+
+    fun syncAdminData() {
+        coroutineScope.launch {
+            isSyncing = true
+            val remoteUsers = TallerRemoteRepository.fetchUsuarios()
+            if (remoteUsers.isNotEmpty()) {
+                usersList = remoteUsers
+            }
+            val remoteTalleres = TallerRemoteRepository.fetchTalleres()
+            if (remoteTalleres.isNotEmpty()) {
+                talleresActivosCount = remoteTalleres.size
+            }
+            isSyncing = false
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        syncAdminData()
+    }
+
+    val metrics = listOf(
+        AdminMetric("Talleres en Base de Datos", "$talleresActivosCount", "Sincronizados vía /api/talleres"),
+        AdminMetric("Usuarios Registrados", "${usersList.size}", "Sincronizados vía /api/usuarios"),
+        AdminMetric("Asistencias Registradas", "128", "Mediante pases QR"),
+        AdminMetric("Tasa de Satisfacción", "94%", "Promedio en encuestas")
+    )
 
     Scaffold(
         topBar = {
@@ -86,17 +112,29 @@ fun AdminScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Text(
-                    text = "Métricas Institucionales de Impacto",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Métricas Institucionales de Impacto",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    OutlinedButton(
+                        onClick = { syncAdminData() },
+                        enabled = !isSyncing,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(if (isSyncing) "Sincronizando..." else "Actualizar")
+                    }
+                }
             }
 
-            // Grid de Métricas
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DEMO_METRICS.chunked(2).forEach { rowMetrics ->
+                    metrics.chunked(2).forEach { rowMetrics ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -141,7 +179,7 @@ fun AdminScreen(
                 )
             }
 
-            items(DEMO_USERS) { user ->
+            items(usersList, key = { it.id }) { user ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
@@ -157,26 +195,28 @@ fun AdminScreen(
                     ) {
                         Column {
                             Text(
-                                text = user.email,
+                                text = user.nombre,
                                 style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Rol asignado: ${user.role}",
+                                text = "${user.email} · ${user.role}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+                        val statusColor = if (user.activo) SyncPassEmerald else MaterialTheme.colorScheme.error
                         Box(
                             modifier = Modifier
-                                .background(SyncPassEmerald.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
-                                .border(1.dp, SyncPassEmerald.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
+                                .background(statusColor.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
+                                .border(1.dp, statusColor.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(
-                                text = user.status,
+                                text = if (user.activo) "Activo" else "De baja",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = SyncPassEmerald
+                                color = statusColor
                             )
                         }
                     }
@@ -193,25 +233,19 @@ fun AdminScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Centro de Notificaciones Push (ntfy.sh)",
+                            text = "Centro de Notificaciones Institucionales",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Emisión directa de eventos SSE hacia dispositivos móviles suscritos. Compatible con la arquitectura de microtópicos por usuario.",
+                            text = "Envío de avisos en tiempo real hacia los dispositivos móviles de los equipos en terreno.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
                         val adminTopic = NtfyTopics.generate("admin.syncpass@duocuc.cl")
-                        Text(
-                            text = "Tópico activo: $adminTopic",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
 
                         Button(
                             onClick = {
@@ -221,11 +255,11 @@ fun AdminScreen(
                                     val res = NtfySender.sendPushNotification(
                                         email = "admin.syncpass@duocuc.cl",
                                         title = "SyncPass Gobernanza",
-                                        message = "Notificación push verificada correctamente vía ntfy.sh"
+                                        message = "Notificación institucional verificada en terreno"
                                     )
                                     isSendingNotification = false
                                     notificationFeedback = if (res.isSuccess) {
-                                        "Notificación enviada al tópico $adminTopic"
+                                        "Notificación enviada exitosamente a los equipos en terreno"
                                     } else {
                                         "Error al enviar: ${res.exceptionOrNull()?.message}"
                                     }
@@ -244,7 +278,7 @@ fun AdminScreen(
                                 )
                                 Spacer(modifier = Modifier.size(8.dp))
                             }
-                            Text("Emitir Notificación Push de Prueba", fontWeight = FontWeight.Bold)
+                            Text("Emitir Notificación Push", fontWeight = FontWeight.Bold)
                         }
 
                         notificationFeedback?.let { feedback ->

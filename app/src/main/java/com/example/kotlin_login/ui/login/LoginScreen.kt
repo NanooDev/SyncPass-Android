@@ -72,7 +72,7 @@ fun LoginScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbar = remember { SnackbarHostState() }
-    var showManualForm by remember { mutableStateOf(false) }
+    var showManualForm by remember { mutableStateOf(true) }
 
     LaunchedEffect(state.loginError) {
         state.loginError?.let {
@@ -209,9 +209,9 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Evaluation Roles Section
+                    // Quick Profile Access Section
                     Text(
-                        text = "ACCESO DIRECTO POR ROL (EVALUACIÓN)",
+                        text = "INGRESO RÁPIDO POR PERFIL",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
