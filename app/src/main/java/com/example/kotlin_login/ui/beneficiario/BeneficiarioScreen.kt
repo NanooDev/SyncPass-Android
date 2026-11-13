@@ -23,17 +23,14 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kotlin_login.domain.model.UserRole
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kotlin_login.ui.components.QrCodeView
 import com.example.kotlin_login.ui.components.SyncPassTopBar
 import com.example.kotlin_login.ui.theme.SyncPassEmerald
@@ -41,12 +38,10 @@ import com.example.kotlin_login.ui.theme.SyncPassEmerald
 @Composable
 fun BeneficiarioScreen(
     onBackClick: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    viewModel: BeneficiarioViewModel = viewModel()
 ) {
-    var rating by remember { mutableIntStateOf(5) }
-    var utilityLevel by remember { mutableIntStateOf(4) }
-    var comments by remember { mutableStateOf("") }
-    var surveySent by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -69,7 +64,7 @@ fun BeneficiarioScreen(
         ) {
             // Pase Digital Personal
             QrCodeView(
-                data = "SYNCPASS-BENEFICIARIO-12345678-9",
+                data = uiState.qrPersonal,
                 title = "Su Pase Digital SyncPass",
                 modifier = Modifier.fillMaxWidth()
             )
@@ -89,17 +84,17 @@ fun BeneficiarioScreen(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Alfabetización Digital para Adultos Mayores",
+                        text = uiState.nombreActividad,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Sede: Junta de Vecinos N°14 Villa El Roble",
+                        text = uiState.sedeActividad,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Horario: Hoy de 15:00 a 17:30 hrs",
+                        text = uiState.horarioActividad,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -126,7 +121,7 @@ fun BeneficiarioScreen(
                     )
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    if (surveySent) {
+                    if (uiState.surveySent) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -143,14 +138,13 @@ fun BeneficiarioScreen(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Agradecemos su participación en esta jornada territorial.",
+                                    text = uiState.statusMessage ?: "Agradecemos su participación en esta jornada territorial.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
                     } else {
-                        // Calificación General (Selector 1 a 5 numérico)
                         Text(
                             text = "Calificación general del taller (1 a 5):",
                             style = MaterialTheme.typography.bodyMedium,
@@ -162,7 +156,7 @@ fun BeneficiarioScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             (1..5).forEach { star ->
-                                val isSelected = star <= rating
+                                val isSelected = star <= uiState.rating
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
@@ -176,7 +170,7 @@ fun BeneficiarioScreen(
                                             if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                                             RoundedCornerShape(8.dp)
                                         )
-                                        .clickable { rating = star },
+                                        .clickable { viewModel.onRatingChange(star) },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
@@ -190,7 +184,6 @@ fun BeneficiarioScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Nivel de Utilidad Práctica
                         Text(
                             text = "¿Qué tan útil resultó el contenido entregado?:",
                             style = MaterialTheme.typography.bodyMedium,
@@ -202,7 +195,7 @@ fun BeneficiarioScreen(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             listOf("Bajo" to 1, "Medio" to 2, "Alto" to 3, "Excelente" to 4).forEach { (label, value) ->
-                                val isSelected = utilityLevel == value
+                                val isSelected = uiState.utilityLevel == value
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
@@ -216,7 +209,7 @@ fun BeneficiarioScreen(
                                             if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                                             RoundedCornerShape(6.dp)
                                         )
-                                        .clickable { utilityLevel = value },
+                                        .clickable { viewModel.onUtilityChange(value) },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
@@ -233,8 +226,8 @@ fun BeneficiarioScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         OutlinedTextField(
-                            value = comments,
-                            onValueChange = { comments = it },
+                            value = uiState.comments,
+                            onValueChange = { viewModel.onCommentsChange(it) },
                             label = { Text("Comentarios o sugerencias (Opcional)") },
                             modifier = Modifier.fillMaxWidth(),
                             minLines = 2,
@@ -244,10 +237,11 @@ fun BeneficiarioScreen(
                         Spacer(modifier = Modifier.height(14.dp))
 
                         Button(
-                            onClick = { surveySent = true },
+                            onClick = { viewModel.onSubmitSurvey() },
+                            enabled = !uiState.isSubmitting,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Enviar Encuesta de Satisfacción")
+                            Text(if (uiState.isSubmitting) "Enviando..." else "Enviar Encuesta de Satisfacción")
                         }
                     }
                 }

@@ -2,6 +2,7 @@ package com.example.kotlin_login.domain.model
 
 /**
  * Entidades de Dominio del Caso SyncPass (Duoc UC • Vinculación con el Medio).
+ * Diseñadas con soporte Offline-First y validación de Geocerca GPS.
  */
 
 data class ProyectoComunitario(
@@ -23,7 +24,11 @@ data class TallerEvento(
     val cuposMaximos: Int,
     val cuposOcupados: Int,
     val codigoQr: String,
-    val estado: String
+    val estado: String,
+    val latitudRecinto: Double = -33.5012,
+    val longitudRecinto: Double = -70.6890,
+    val radioGeofenceMetros: Int = 150,
+    val sincronizado: Boolean = true
 )
 
 data class AsistenciaRegistro(
@@ -33,7 +38,12 @@ data class AsistenciaRegistro(
     val nombreBeneficiario: String,
     val timestamp: Long = System.currentTimeMillis(),
     val metodo: String = "QR", // QR o MANUAL
-    val sincronizado: Boolean = true
+    val sincronizado: Boolean = true,
+    val latitud: Double = -33.5015,
+    val longitud: Double = -70.6887,
+    val distanciaMetros: Int = 35,
+    val estadoValidacion: String = "valido", // valido, fuera_de_rango, duplicado
+    val deviceId: String = "ANDROID-SYNCPASS-01"
 )
 
 data class EncuestaSatisfaccion(
@@ -43,5 +53,7 @@ data class EncuestaSatisfaccion(
     val calificacionEstrellas: Int,
     val utilidad: Int,
     val comentarios: String,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val sincronizado: Boolean = true,
+    val deviceId: String = "ANDROID-SYNCPASS-01"
 )

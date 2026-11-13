@@ -29,63 +29,30 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.kotlin_login.data.repository.TallerRemoteRepository
-import com.example.kotlin_login.domain.model.TallerEvento
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kotlin_login.ui.components.QrCodeView
 import com.example.kotlin_login.ui.components.SyncPassTopBar
 import com.example.kotlin_login.ui.theme.SyncPassEmerald
-import kotlinx.coroutines.launch
 
 @Composable
 fun DocenteScreen(
     onBackClick: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    viewModel: DocenteViewModel = viewModel()
 ) {
-    val coroutineScope = rememberCoroutineScope()
-    var talleres by remember { mutableStateOf(TallerRemoteRepository.initialTalleres) }
-    var selectedTaller by remember { mutableStateOf(talleres.first()) }
-    var isSyncing by remember { mutableStateOf(false) }
-    var statusMessage by remember { mutableStateOf<String?>(null) }
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
-    // Estados del modal de creación de taller (Mantenedor Móvil <-> Web)
-    var showCreateDialog by remember { mutableStateOf(false) }
-    var newNombre by remember { mutableStateOf("") }
-    var newLugar by remember { mutableStateOf("") }
-    var newFecha by remember { mutableStateOf("Hoy, 16:00 hrs") }
-    var newCupos by remember { mutableStateOf("30") }
-
-    fun syncTalleres(showFeedback: Boolean = false) {
-        coroutineScope.launch {
-            isSyncing = true
-            val remote = TallerRemoteRepository.fetchTalleres()
-            if (remote.isNotEmpty()) {
-                talleres = remote
-                selectedTaller = remote.find { it.id == selectedTaller.id } ?: remote.first()
-                if (showFeedback) {
-                    statusMessage = "Talleres sincronizados en tiempo real con la Web (/api/talleres)"
-                }
-            }
-            isSyncing = false
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        syncTalleres(showFeedback = false)
-    }
-
-    if (showCreateDialog) {
+    if (uiState.showCreateDialog) {
         AlertDialog(
-            onDismissRequest = { showCreateDialog = false },
+            onDismissRequest = { viewModel.onDismissCreateDialog() },
             title = {
                 Text(
                     text = "Crear Nuevo Taller",
@@ -96,29 +63,29 @@ fun DocenteScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
-                        value = newNombre,
-                        onValueChange = { newNombre = it },
+                        value = uiState.newNombre,
+                        onValueChange = { viewModel.onNewNombreChange(it) },
                         label = { Text("Nombre del taller") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        value = newLugar,
-                        onValueChange = { newLugar = it },
+                        value = uiState.newLugar,
+                        onValueChange = { viewModel.onNewLugarChange(it) },
                         label = { Text("Sede o recinto vecinal") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        value = newFecha,
-                        onValueChange = { newFecha = it },
+                        value = uiState.newFecha,
+                        onValueChange = { viewModel.onNewFechaChange(it) },
                         label = { Text("Fecha y horario") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        value = newCupos,
-                        onValueChange = { newCupos = it },
+                        value = uiState.newCupos,
+                        onValueChange = { viewModel.onNewCuposChange(it) },
                         label = { Text("Cupos máximos") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
@@ -127,38 +94,14 @@ fun DocenteScreen(
             },
             confirmButton = {
                 Button(
-                    onClick = {
-                        if (newNombre.isNotBlank() && newLugar.isNotBlank()) {
-                            val cupos = newCupos.toIntOrNull()?.coerceAtLeast(1) ?: 30
-                            val nombreCreado = newNombre.trim()
-                            val lugarCreado = newLugar.trim()
-                            val fechaCreada = newFecha.trim()
-                            showCreateDialog = false
-                            newNombre = ""
-                            newLugar = ""
-                            coroutineScope.launch {
-                                isSyncing = true
-                                val updated = TallerRemoteRepository.createTaller(
-                                    nombre = nombreCreado,
-                                    lugar = lugarCreado,
-                                    fechaHora = fechaCreada,
-                                    cuposMaximos = cupos,
-                                    currentList = talleres
-                                )
-                                talleres = updated
-                                selectedTaller = updated.first()
-                                isSyncing = false
-                                statusMessage = "Taller \"$nombreCreado\" guardado y sincronizado con la Web"
-                            }
-                        }
-                    },
+                    onClick = { viewModel.onCreateTaller() },
                     colors = ButtonDefaults.buttonColors(containerColor = SyncPassEmerald)
                 ) {
                     Text("Guardar Taller")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showCreateDialog = false }) {
+                TextButton(onClick = { viewModel.onDismissCreateDialog() }) {
                     Text("Cancelar")
                 }
             }
@@ -200,7 +143,7 @@ fun DocenteScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Sincronizado en tiempo real con la plataforma Web (/api/talleres).",
+                            text = "Sincronizado en tiempo real con PostgreSQL Supabase (/api/talleres) y caché local Room.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -210,7 +153,7 @@ fun DocenteScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Button(
-                                onClick = { showCreateDialog = true },
+                                onClick = { viewModel.onOpenCreateDialog() },
                                 colors = ButtonDefaults.buttonColors(containerColor = SyncPassEmerald),
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier.weight(1f)
@@ -218,15 +161,15 @@ fun DocenteScreen(
                                 Text("+ Nuevo Taller", fontWeight = FontWeight.Bold)
                             }
                             OutlinedButton(
-                                onClick = { syncTalleres(showFeedback = true) },
-                                enabled = !isSyncing,
+                                onClick = { viewModel.syncTalleres(showFeedback = true) },
+                                enabled = !uiState.isSyncing,
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(if (isSyncing) "Sincronizando..." else "Actualizar API")
+                                Text(if (uiState.isSyncing) "Sincronizando..." else "Actualizar API")
                             }
                         }
-                        statusMessage?.let { msg ->
+                        uiState.statusMessage?.let { msg ->
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = msg,
@@ -238,8 +181,8 @@ fun DocenteScreen(
                 }
             }
 
-            items(talleres, key = { it.id }) { taller ->
-                val isSelected = taller.id == selectedTaller.id
+            items(uiState.talleres, key = { it.id }) { taller ->
+                val isSelected = taller.id == uiState.selectedTaller?.id
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -248,7 +191,7 @@ fun DocenteScreen(
                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                             shape = RoundedCornerShape(12.dp)
                         )
-                        .clickable { selectedTaller = taller },
+                        .clickable { viewModel.onSelectTaller(taller) },
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -288,14 +231,7 @@ fun DocenteScreen(
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.error,
                                     modifier = Modifier.clickable {
-                                        coroutineScope.launch {
-                                            val updated = TallerRemoteRepository.deleteTaller(taller.id, talleres)
-                                            if (updated.isNotEmpty()) {
-                                                talleres = updated
-                                                selectedTaller = updated.first()
-                                            }
-                                            statusMessage = "Taller eliminado de la base de datos"
-                                        }
+                                        viewModel.onDeleteTaller(taller.id)
                                     }
                                 )
                             }
@@ -346,22 +282,24 @@ fun DocenteScreen(
                 }
             }
 
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    QrCodeView(
-                        data = selectedTaller.codigoQr,
-                        title = "Pase QR del Taller: ${selectedTaller.nombre}",
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = { statusMessage = "Acta de asistencia exportada para ${selectedTaller.nombre}" },
-                        modifier = Modifier.fillMaxWidth()
+            uiState.selectedTaller?.let { selectedTaller ->
+                item {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("Descargar Acta de Asistencia (PDF)")
+                        QrCodeView(
+                            data = selectedTaller.codigoQr,
+                            title = "Pase QR del Taller: ${selectedTaller.nombre}",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = { viewModel.onExportActa(context) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Exportar Acta de Asistencia a Dispositivo (CSV)")
+                        }
                     }
                 }
             }

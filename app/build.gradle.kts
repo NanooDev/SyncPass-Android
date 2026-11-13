@@ -1,8 +1,10 @@
 import java.util.Properties
+import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    jacoco
 }
 
 val envFile = rootProject.file(".env")
@@ -15,7 +17,7 @@ fun envOr(key: String, fallback: String): String =
 
 // Prioridad: .env > variable de entorno del sistema > fallback solo para compilar
 val apiBaseUrl: String =
-    envOr("API_BASE_URL", "https://172-233-15-71.ip.linodeusercontent.com/")
+    envOr("API_BASE_URL", "https://sync-pass-web-rho.vercel.app/")
 
 val cognitoRedirectDefault = "com.example.kotlinlogin://cognito/callback"
 val cognitoIssuer: String = envOr("COGNITO_ISSUER", "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_RlB8Ft9Z2")
@@ -51,6 +53,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+        }
         release {
             optimization {
                 enable = false
@@ -65,6 +70,56 @@ android {
         compose = true
         buildConfig = true
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+tasks.withType<Test>().configureEach {
+    extensions.configure<org.gradle.testing.jacoco.plugins.JacocoTaskExtension> {
+        isIncludeNoLocationClasses = false
+        includes = listOf("com.example.kotlin_login.*")
+        excludes = listOf("jdk.internal.*", "sun.*", "com.sun.*", "java.*", "javax.*")
+    }
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    val fileFilter = listOf(
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*",
+        "android/**/*.*",
+        // Excluir vistas declarativas puras de Jetpack Compose (evaluadas por UI/Mockups, no lógica de negocio)
+        "**/ui/**/*Screen*.*",
+        "**/ui/components/**/*.*",
+        "**/ui/navigation/**/*.*",
+        "**/ui/theme/**/*.*",
+        "**/MainActivity*.*",
+        "**/NotificationService*.*"
+    )
+    val debugTree = fileTree("${layout.buildDirectory.get()}/intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes") {
+        exclude(fileFilter)
+    }
+    val mainSrc = "${project.projectDir}/src/main/java"
+    sourceDirectories.setFrom(files(mainSrc))
+    classDirectories.setFrom(files(debugTree))
+    executionData.setFrom(fileTree(layout.buildDirectory.get()) {
+        include(
+            "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+            "jacoco/testDebugUnitTest.exec"
+        )
+    })
 }
 
 dependencies {
@@ -77,6 +132,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     testImplementation(libs.junit)
+    testImplementation(libs.coroutines.test)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -92,10 +148,11 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
+    implementation(libs.room.common)
 
     // Navigation Compose
     implementation(libs.androidx.navigation.compose)
 
     // Módulo reutilizable de login Cognito
     implementation(project(":cognito-auth"))
-}
+}

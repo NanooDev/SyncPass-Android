@@ -19,21 +19,19 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.kotlin_login.domain.model.AsistenciaRegistro
-import com.example.kotlin_login.domain.model.UserRole
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kotlin_login.ui.components.QrScannerView
 import com.example.kotlin_login.ui.components.SyncPassTopBar
 import com.example.kotlin_login.ui.theme.SyncPassAmber
@@ -45,19 +43,11 @@ import java.util.Locale
 @Composable
 fun VoluntarioScreen(
     onBackClick: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    viewModel: VoluntarioViewModel = viewModel()
 ) {
-    var isOffline by remember { mutableStateOf(false) }
-    var pendingSyncCount by remember { mutableIntStateOf(3) }
-    var feedbackMessage by remember { mutableStateOf<String?>(null) }
-
-    val asistencias = remember {
-        mutableStateListOf(
-            AsistenciaRegistro("1", "T-101", "12.345.678-9", "María González", System.currentTimeMillis() - 600000, "QR", true),
-            AsistenciaRegistro("2", "T-101", "14.567.890-K", "Juan Pérez Morales", System.currentTimeMillis() - 300000, "QR", true),
-            AsistenciaRegistro("3", "T-101", "10.987.654-3", "Rosa Morales Silva", System.currentTimeMillis() - 60000, "MANUAL", false)
-        )
-    }
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -77,17 +67,17 @@ fun VoluntarioScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Panel de Control de Conectividad y Sincronización
+            // Panel de Control de Conectividad y Sincronización Offline-First
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isOffline) SyncPassAmber.copy(alpha = 0.12f) else SyncPassEmerald.copy(alpha = 0.12f)
+                        containerColor = if (uiState.isOffline) SyncPassAmber.copy(alpha = 0.12f) else SyncPassEmerald.copy(alpha = 0.12f)
                     ),
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
-                        if (isOffline) SyncPassAmber else SyncPassEmerald
+                        if (uiState.isOffline) SyncPassAmber else SyncPassEmerald
                     )
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -96,45 +86,87 @@ fun VoluntarioScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = if (isOffline) "Modo Sin Conexión (Offline)" else "Conexión a la Nube Activa",
+                                    text = if (uiState.isOffline) "Modo Sin Conexión (Offline-First)" else "Conexión a la Nube Activa",
                                     style = MaterialTheme.typography.titleSmall,
-                                    color = if (isOffline) SyncPassAmber else SyncPassEmerald
+                                    color = if (uiState.isOffline) SyncPassAmber else SyncPassEmerald,
+                                    fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = if (isOffline)
-                                        "$pendingSyncCount registros almacenados localmente"
+                                    text = if (uiState.pendingSyncCount > 0)
+                                        "${uiState.pendingSyncCount} registro(s) pendientes en Room/SQLite local"
                                     else
-                                        "Sincronización en tiempo real habilitada",
+                                        "Todos los registros locales sincronizados con Supabase",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Switch(
-                                checked = isOffline,
-                                onCheckedChange = { isOffline = it }
+                                checked = uiState.isOffline,
+                                onCheckedChange = { viewModel.onToggleOfflineMode(it) }
                             )
                         }
 
-                        if (isOffline && pendingSyncCount > 0) {
+                        if (uiState.pendingSyncCount > 0) {
                             Spacer(modifier = Modifier.height(10.dp))
                             Button(
-                                onClick = {
-                                    pendingSyncCount = 0
-                                    feedbackMessage = "Todos los registros locales fueron sincronizados con la nube."
-                                },
+                                onClick = { viewModel.onSyncPendingClick() },
+                                enabled = !uiState.isSyncing,
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = ButtonDefaults.buttonColors(containerColor = SyncPassAmber)
                             ) {
-                                Text("Sincronizar $pendingSyncCount Registros Pendientes")
+                                Text(
+                                    if (uiState.isSyncing)
+                                        "Sincronizando con Supabase..."
+                                    else
+                                        "Sincronizar ${uiState.pendingSyncCount} Registro(s) Pendientes"
+                                )
                             }
                         }
                     }
                 }
             }
 
-            if (feedbackMessage != null) {
+            // Panel de Hardware Nativo: Geolocalización GPS & Geocerca (API Nativa #1) y Cámara (API Nativa #2)
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Geocerca GPS & Sensor Óptico",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Coord: ${uiState.latitudActual}, ${uiState.longitudActual} · Dist: ${uiState.distanciaRecintoMetros}m / 150m",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            OutlinedButton(
+                                onClick = { viewModel.onRefreshHardwareSensors(context) },
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("Validar GPS")
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (uiState.feedbackMessage != null) {
                 item {
                     Box(
                         modifier = Modifier
@@ -144,7 +176,7 @@ fun VoluntarioScreen(
                             .padding(12.dp)
                     ) {
                         Text(
-                            text = feedbackMessage ?: "",
+                            text = uiState.feedbackMessage ?: "",
                             style = MaterialTheme.typography.bodySmall,
                             color = SyncPassEmerald
                         )
@@ -156,22 +188,7 @@ fun VoluntarioScreen(
             item {
                 QrScannerView(
                     onCodeScanned = { scannedCode ->
-                        val nuevo = AsistenciaRegistro(
-                            id = (asistencias.size + 1).toString(),
-                            tallerId = "T-101",
-                            rut = scannedCode,
-                            nombreBeneficiario = "Beneficiario Acreditado",
-                            timestamp = System.currentTimeMillis(),
-                            metodo = if (scannedCode.startsWith("SYNCPASS")) "QR" else "MANUAL",
-                            sincronizado = !isOffline
-                        )
-                        asistencias.add(0, nuevo)
-                        if (isOffline) {
-                            pendingSyncCount++
-                            feedbackMessage = "Asistencia guardada en almacenamiento local (sin red)."
-                        } else {
-                            feedbackMessage = "Asistencia registrada y validada en el servidor central."
-                        }
+                        viewModel.onCodeScanned(scannedCode)
                     }
                 )
             }
@@ -179,13 +196,13 @@ fun VoluntarioScreen(
             // Lista de Asistencias del Día
             item {
                 Text(
-                    text = "Acreditaciones Recientes (${asistencias.size})",
+                    text = "Acreditaciones en Dispositivo (${uiState.asistencias.size})",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
 
-            items(asistencias) { item ->
+            items(uiState.asistencias, key = { it.id }) { item ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
@@ -199,20 +216,20 @@ fun VoluntarioScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = item.nombreBeneficiario,
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "RUT: ${item.rut} · Método: ${item.metodo}",
+                                text = "ID: ${item.rut} · Método: ${item.metodo} · GPS: ${item.distanciaMetros}m",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             val timeStr = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(item.timestamp))
                             Text(
-                                text = "Hora: $timeStr",
+                                text = "Hora: $timeStr · Validación: ${item.estadoValidacion}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
