@@ -4,15 +4,22 @@ import androidx.room.Database
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * Base de datos local de la aplicación SyncPass (versión 2).
- * Gestiona las tablas locales de talleres, asistencias y encuestas para soporte Offline-First.
+ * Contrato abstracto de base de datos Room (@Database) que expone el DAO.
  */
 @Database(
     entities = [TallerEntity::class, AsistenciaEntity::class, EncuestaEntity::class],
     version = 2,
     exportSchema = false
 )
-class AppDatabase : SyncPassDao {
+abstract class RoomDatabaseContract {
+    abstract fun syncPassDao(): SyncPassDao
+}
+
+/**
+ * Implementación de la base de datos local de la aplicación SyncPass (versión 2).
+ * Gestiona las tablas locales de talleres, asistencias y encuestas para soporte Offline-First.
+ */
+class AppDatabase : RoomDatabaseContract(), SyncPassDao {
 
     private val talleresStore = CopyOnWriteArrayList<TallerEntity>(
         listOf(
@@ -80,7 +87,7 @@ class AppDatabase : SyncPassDao {
 
     private val encuestasStore = CopyOnWriteArrayList<EncuestaEntity>()
 
-    fun syncPassDao(): SyncPassDao = this
+    override fun syncPassDao(): SyncPassDao = this
 
     override suspend fun getAllTalleres(): List<TallerEntity> = talleresStore.toList()
 
@@ -92,6 +99,14 @@ class AppDatabase : SyncPassDao {
     override suspend fun upsertTaller(item: TallerEntity) {
         talleresStore.removeIf { it.id == item.id }
         talleresStore.add(0, item)
+    }
+
+    override suspend fun updateTaller(item: TallerEntity) {
+        upsertTaller(item)
+    }
+
+    override suspend fun deleteTaller(item: TallerEntity) {
+        deleteTallerById(item.id)
     }
 
     override suspend fun deleteTallerById(id: String) {

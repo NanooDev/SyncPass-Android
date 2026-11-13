@@ -1,13 +1,15 @@
 package com.example.kotlin_login.data.local
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 
 /**
  * Data Access Object (DAO) con anotaciones Room para el almacenamiento local SQLite.
- * Única capa que define consultas locales sobre las tablas del dispositivo.
+ * Única capa que define consultas locales (@Query, @Insert, @Update, @Delete) sobre las tablas del dispositivo.
  */
 @Dao
 interface SyncPassDao {
@@ -20,6 +22,12 @@ interface SyncPassDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertTaller(item: TallerEntity)
+
+    @Update
+    suspend fun updateTaller(item: TallerEntity)
+
+    @Delete
+    suspend fun deleteTaller(item: TallerEntity)
 
     @Query("DELETE FROM evento_taller_local WHERE id = :id")
     suspend fun deleteTallerById(id: String)

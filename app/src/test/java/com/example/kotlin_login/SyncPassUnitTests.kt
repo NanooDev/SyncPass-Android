@@ -219,6 +219,21 @@ class SyncPassUnitTests {
         // 1. Listar talleres remotos y guardar en local
         val talleres = repo.getTalleres(forceRemote = true)
         assertTrue(talleres.isNotEmpty())
+        val sampleEntity = talleres.first().copy(nombre = "Taller Editado").run {
+            com.example.kotlin_login.data.local.TallerEntity(
+                id = id,
+                proyectoId = proyectoId,
+                nombre = nombre,
+                fechaHora = fechaHora,
+                lugar = lugar,
+                cuposMaximos = cuposMaximos,
+                cuposOcupados = cuposOcupados,
+                codigoQr = codigoQr,
+                estado = estado
+            )
+        }
+        db.updateTaller(sampleEntity)
+        db.deleteTaller(sampleEntity.copy(id = "TEMP-DEL"))
 
         // 2. Crear taller online y eliminar taller
         val afterCreate = repo.createTaller("Taller Ciberseguridad", "Sede Norte", "Mañana 10:00", 25, isOffline = false)
