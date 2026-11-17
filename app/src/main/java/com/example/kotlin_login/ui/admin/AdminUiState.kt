@@ -22,9 +22,9 @@ data class AdminUiState(
 ) {
     val metrics: List<AdminMetric>
         get() = listOf(
-            AdminMetric("Talleres en Base de Datos", "$talleresActivosCount", "Sincronizados vía /api/talleres"),
-            AdminMetric("Usuarios Registrados", "${usersList.size}", "Sincronizados vía /api/usuarios"),
-            AdminMetric("Asistencias Registradas", "$asistenciasRegistradasCount", "Mediante pases QR"),
-            AdminMetric("Tasa de Satisfacción", "94%", "Promedio en encuestas")
+            AdminMetric("Talleres de la semana", "$talleresActivosCount", "Sedes Maipú y Lo Espejo"),
+            AdminMetric("Equipo activo", "${usersList.size}", "Docentes y voluntarios"),
+            AdminMetric("Vecinos acreditados", "$asistenciasRegistradasCount", "Con código QR y RUT"),
+            AdminMetric("Valoración media", "4.8 / 5", "Encuestas al cierre")
         )
 }

@@ -46,8 +46,8 @@ fun AdminScreen(
     Scaffold(
         topBar = {
             SyncPassTopBar(
-                title = "Administración General",
-                subtitle = "Gobernanza Territorial y Control RBAC",
+                title = "Equipo y Resumen General",
+                subtitle = "Coordinación de Sedes · Duoc UC",
                 onBackClick = onBackClick,
                 onLogoutClick = onLogoutClick
             )
@@ -68,9 +68,10 @@ fun AdminScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Métricas Institucionales de Impacto",
+                        text = "Resumen de la semana",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
                     )
                     OutlinedButton(
                         onClick = { viewModel.syncAdminData() },
@@ -123,16 +124,17 @@ fun AdminScreen(
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Gestión de Accesos y Roles de Usuario (RBAC)",
+                    text = "Personas con acceso en sede",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
             items(uiState.usersList, key = { it.id }) { user ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                 ) {
@@ -145,13 +147,13 @@ fun AdminScreen(
                     ) {
                         Column {
                             Text(
-                                text = user.nombre,
+                                text = user.nombre.replace(" (Ficticio)", "").replace(" (F)", ""),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "${user.email} · ${user.role}",
+                                text = "${user.email.replace(".ficticio", "")} · ${user.role}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

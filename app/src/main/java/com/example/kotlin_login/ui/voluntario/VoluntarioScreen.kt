@@ -1,5 +1,12 @@
 package com.example.kotlin_login.ui.voluntario
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -20,12 +27,16 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -48,12 +59,20 @@ fun VoluntarioScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredAsistencias = remember(uiState.asistencias, searchQuery) {
+        if (searchQuery.isBlank()) uiState.asistencias
+        else uiState.asistencias.filter {
+            it.nombreBeneficiario.contains(searchQuery, ignoreCase = true) ||
+                it.rut.contains(searchQuery, ignoreCase = true)
+        }
+    }
 
     Scaffold(
         topBar = {
             SyncPassTopBar(
-                title = "Acreditación en Terreno",
-                subtitle = "Estudiante Voluntario · Modo Operativo",
+                title = "Recepción de Asistentes",
+                subtitle = "Voluntariado en Sede · Duoc UC",
                 onBackClick = onBackClick,
                 onLogoutClick = onLogoutClick
             )
@@ -65,13 +84,15 @@ fun VoluntarioScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Panel de Control de Conectividad y Sincronización Offline-First
+            // Panel de Conectividad y Sincronización Offline-First
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(tween(240)),
+                    shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = if (uiState.isOffline) SyncPassAmber.copy(alpha = 0.12f) else SyncPassEmerald.copy(alpha = 0.12f)
                     ),
@@ -88,16 +109,16 @@ fun VoluntarioScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = if (uiState.isOffline) "Modo Sin Conexión (Offline-First)" else "Conexión a la Nube Activa",
+                                    text = if (uiState.isOffline) "Trabajando sin internet (Modo Offline)" else "Conectado · Guardando en línea",
                                     style = MaterialTheme.typography.titleSmall,
                                     color = if (uiState.isOffline) SyncPassAmber else SyncPassEmerald,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = if (uiState.pendingSyncCount > 0)
-                                        "${uiState.pendingSyncCount} registro(s) pendientes en Room/SQLite local"
+                                        "${uiState.pendingSyncCount} asistencia(s) guardadas en el teléfono listas para subir"
                                     else
-                                        "Todos los registros locales sincronizados con Supabase",
+                                        "Todas las asistencias están al día con la nube",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -108,31 +129,37 @@ fun VoluntarioScreen(
                             )
                         }
 
-                        if (uiState.pendingSyncCount > 0) {
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Button(
-                                onClick = { viewModel.onSyncPendingClick() },
-                                enabled = !uiState.isSyncing,
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(containerColor = SyncPassAmber)
-                            ) {
-                                Text(
-                                    if (uiState.isSyncing)
-                                        "Sincronizando con Supabase..."
-                                    else
-                                        "Sincronizar ${uiState.pendingSyncCount} Registro(s) Pendientes"
-                                )
+                        AnimatedVisibility(
+                            visible = uiState.pendingSyncCount > 0,
+                            enter = fadeIn(tween(200)) + expandVertically(tween(200)),
+                            exit = fadeOut(tween(150)) + shrinkVertically(tween(150))
+                        ) {
+                            Column {
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Button(
+                                    onClick = { viewModel.onSyncPendingClick() },
+                                    enabled = !uiState.isSyncing,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = SyncPassAmber)
+                                ) {
+                                    Text(
+                                        if (uiState.isSyncing)
+                                            "Subiendo asistencias..."
+                                        else
+                                            "Sincronizar ${uiState.pendingSyncCount} Registro(s) Pendientes"
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
 
-            // Panel de Hardware Nativo: Geolocalización GPS & Geocerca (API Nativa #1) y Cámara (API Nativa #2)
+            // Panel de Hardware Nativo: Geolocalización GPS & Geocerca (API Nativa #1)
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                 ) {
@@ -142,15 +169,15 @@ fun VoluntarioScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Geocerca GPS & Sensor Óptico",
+                                    text = "Ubicación en sede (${uiState.distanciaRecintoMetros} m del recinto)",
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "Coord: ${uiState.latitudActual}, ${uiState.longitudActual} · Dist: ${uiState.distanciaRecintoMetros}m / 150m",
+                                    text = "GPS: ${uiState.latitudActual}, ${uiState.longitudActual} · Radio permitido: 150 m",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -171,20 +198,21 @@ fun VoluntarioScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(SyncPassEmerald.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
-                            .border(1.dp, SyncPassEmerald, RoundedCornerShape(8.dp))
+                            .background(SyncPassEmerald.copy(alpha = 0.12f), RoundedCornerShape(10.dp))
+                            .border(1.dp, SyncPassEmerald, RoundedCornerShape(10.dp))
                             .padding(12.dp)
                     ) {
                         Text(
                             text = uiState.feedbackMessage ?: "",
                             style = MaterialTheme.typography.bodySmall,
-                            color = SyncPassEmerald
+                            color = SyncPassEmerald,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
             }
 
-            // Escáner QR y Registro
+            // Escáner QR y Registro Manual
             item {
                 QrScannerView(
                     onCodeScanned = { scannedCode ->
@@ -193,16 +221,33 @@ fun VoluntarioScreen(
                 )
             }
 
-            // Lista de Asistencias del Día
+            // Lista de Asistencias del Día + Buscador Rápido
             item {
-                Text(
-                    text = "Acreditaciones en Dispositivo (${uiState.asistencias.size})",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Vecinos acreditados hoy (${filteredAsistencias.size})",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = { Text("Buscar por nombre o RUT...") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
-            items(uiState.asistencias, key = { it.id }) { item ->
+            items(filteredAsistencias, key = { it.id }) { item ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),

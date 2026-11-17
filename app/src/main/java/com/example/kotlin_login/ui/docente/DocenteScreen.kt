@@ -136,14 +136,14 @@ fun DocenteScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Mantenedor de Talleres Territoriales",
+                            text = "Talleres y Jornadas en Sede",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Sincronizado en tiempo real con PostgreSQL Supabase (/api/talleres) y caché local Room.",
+                            text = "Organiza las actividades de la semana, revisa la asistencia en vivo y descarga el acta oficial.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -166,7 +166,7 @@ fun DocenteScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(if (uiState.isSyncing) "Sincronizando..." else "Actualizar API")
+                                Text(if (uiState.isSyncing) "Actualizando..." else "Actualizar lista")
                             }
                         }
                         uiState.statusMessage?.let { msg ->

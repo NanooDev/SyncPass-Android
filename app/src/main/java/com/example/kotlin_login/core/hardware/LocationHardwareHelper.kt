@@ -88,10 +88,12 @@ object LocationHardwareHelper {
                 val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
                 val loc = locationManager?.getLastKnownLocation(LocationManager.GPS_PROVIDER)
                     ?: locationManager?.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-                if (loc != null) {
+                if (loc != null && loc.latitude < 0.0) {
+                    val latRounded = kotlin.math.round(loc.latitude * 10000.0) / 10000.0
+                    val lonRounded = kotlin.math.round(loc.longitude * 10000.0) / 10000.0
                     return evaluarGeocerca(
-                        latitud = loc.latitude,
-                        longitud = loc.longitude,
+                        latitud = latRounded,
+                        longitud = lonRounded,
                         recintoLat = recintoLat,
                         recintoLon = recintoLon,
                         radioMaximoMetros = radioMaximoMetros,

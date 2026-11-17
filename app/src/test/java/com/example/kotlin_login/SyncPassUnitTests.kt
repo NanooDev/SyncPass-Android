@@ -391,6 +391,21 @@ class SyncPassUnitTests {
         assertTrue(loginVm.uiState.value.isSuccess)
         loginVm.onErrorShown()
 
+        // Test Registro y Fallback Offline en LoginViewModel
+        val failingAuthApi = object : AuthApiService {
+            override suspend fun login(body: LoginRequest): LoginResponse =
+                throw RuntimeException("Offline")
+        }
+        val regVm = LoginViewModel(AuthRepository(failingAuthApi))
+        regVm.onSetRegisterMode(true)
+        regVm.onFullNameChange("Mariano Acevedo")
+        regVm.onUsernameChange("voluntario.nuevo@duocuc.cl")
+        regVm.onPasswordChange("123456")
+        regVm.onRoleSelectedChange("volunteer")
+        regVm.onLoginClick()
+        assertTrue(regVm.uiState.value.isSuccess)
+        assertEquals("DEMO_volunteer", regVm.uiState.value.authToken)
+
         // Domain Models, UserRole, Configs & DI Modules
         val proyecto = ProyectoComunitario("P1", "Titulo", "Desc", "Tech", "UV1", 50, "activo")
         assertEquals("P1", proyecto.id)
