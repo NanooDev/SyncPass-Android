@@ -177,3 +177,71 @@ flowchart TB
 | **Cliente Remoto (`data/remote`)** | `SyncPassApiService`, `SyncPassRemoteDtos` (`@SerializedName`) | Define los contratos HTTP (`@GET`, `@POST`, `@DELETE`) gestionados por `Retrofit` y `OkHttpClient` con `HttpLoggingInterceptor`. |
 | **Inyección de Dependencias (`di/`)** | `NetworkModule`, `DatabaseModule`, `RepositoryModule` | Provee instancias únicas (`@Singleton` / `by lazy`) de `OkHttpClient`, `Retrofit`, `AppDatabase`, `DataSources` y `SyncPassRepository`, reduciendo el consumo de memoria RAM y batería en el dispositivo móvil. |
 | **Hardware Nativo (`core/hardware/`)** | `LocationHardwareHelper`, `QrCameraHardwareHelper`, `ActaStorageHelper` | Integración con **3 APIs nativas de Android**: (1) `LocationManager` + cálculo Haversine de geocerca a 150m, (2) `CameraManager` + decodificación de QR institucional, y (3) `File Storage` para exportación de actas CSV en el almacenamiento interno. |
+
+---
+
+## 3.2 Nivel C3: Diagrama de Componentes (Aplicación Web `SyncPass-Web` – React + TypeScript + Atomic Design)
+
+```mermaid
+flowchart TB
+    subgraph "Enrutamiento y Seguridad (Wouter)"
+        ROUTER["App.tsx (Wouter Switch/Route)"]
+        GUARD["RequireAuth.tsx\n(Guardia de rutas protegidas y RBAC)"]
+    end
+
+    subgraph "Capa Pages (src/pages/*)"
+        P_HOME["HomePage.tsx\n(Portada y Credencial 3D QR)"]
+        P_LOGIN["LoginPage.tsx\n(Login obligatorio / Registro / Cognito)"]
+        P_DASH["DashboardPage.tsx\n(Panel Docente / Voluntario / Beneficiario)"]
+        P_USERS["UsersPage.tsx\n(Mantenedor de Equipo RBAC)"]
+    end
+
+    subgraph "Capa Components — ATOMIC DESIGN (src/components/*)"
+        ATOM["Atoms: StatusBadge.tsx"]
+        MOL["Molecules: MetricCard.tsx, UserCard.tsx"]
+        ORG["Organisms: WorkshopSummaryBanner.tsx"]
+        TPL["Templates: PageShell.tsx, Layout.tsx"]
+    end
+
+    subgraph "Capa Hooks & Contexts (src/hooks/*, src/contexts/*)"
+        CTX["AuthProvider.tsx & auth-context.ts\n(Estado global de sesión + JWT)"]
+        HOOKS["useAuth.ts, useRoles.ts, useDocumentTitle.ts"]
+    end
+
+    subgraph "Capa Clients, Services & Utils (src/clients/*, src/services/*, src/utils/*)"
+        API_CLIENT["api.ts\n(Clientes HTTP tipados con interface/type)"]
+        NTFY_SVC["ntfy.ts\n(Push SSE SHA-256 + BFF)"]
+        UTILS["formatters.ts\n(Validador RUT, cálculo quórum, exportador CSV)"]
+    end
+
+    ROUTER --> GUARD
+    GUARD --> P_DASH
+    GUARD --> P_USERS
+    ROUTER --> P_HOME
+    ROUTER --> P_LOGIN
+
+    P_DASH --> TPL
+    TPL --> ORG
+    ORG --> MOL
+    MOL --> ATOM
+
+    P_DASH --> HOOKS
+    P_LOGIN --> HOOKS
+    P_USERS --> HOOKS
+    HOOKS --> CTX
+
+    P_DASH --> API_CLIENT
+    P_DASH --> NTFY_SVC
+    P_DASH --> UTILS
+    P_LOGIN --> API_CLIENT
+```
+
+### Responsabilidades por Capa en React TypeScript (`SyncPass-Web`)
+
+| Capa (`src/`) | Archivos Clave | Cumplimiento de Rúbrica |
+| :--- | :--- | :--- |
+| **`pages/` (Ruteadas con Wouter)** | `HomePage.tsx`, `LoginPage.tsx`, `DashboardPage.tsx`, `UsersPage.tsx` | Vistas principales enlazadas con `<Switch>` y `<Route>` de **Wouter**; páginas operativas protegidas con `RequireAuth`. |
+| **`components/` (Atomic Design + Tailwind)** | `atoms/StatusBadge.tsx`, `molecules/MetricCard.tsx`, `organisms/WorkshopSummaryBanner.tsx`, `templates/PageShell.tsx`, `layout/Layout.tsx`, `require-auth/RequireAuth.tsx` | Jerarquía **Atomic Design** completa (`atoms` $\rightarrow$ `molecules` $\rightarrow$ `organisms` $\rightarrow$ `templates`) estilizada con **Tailwind CSS v4** y CSS Modules. |
+| **`hooks/` & `contexts/`** | `useAuth.ts`, `useRoles.ts`, `useDocumentTitle.ts`, `AuthProvider.tsx`, `auth-context.ts` | Gestión reactiva del estado de autenticación (`Context` + `Custom Hooks`) con persistencia local y soporte OAuth2 PKCE (AWS Cognito). |
+| **`clients/` & `services/`** | `clients/api.ts`, `services/ntfy.ts` | Clientes HTTP con contratos tipados (`interface` y `type` de Request y Response) hacia el API Gateway / BFF Spring Boot y funciones serverless conectadas a **Supabase PostgreSQL**. |
+| **`utils/`** | `utils/formatters.ts` | Funciones puras de dominio: formateo y validación de RUT chileno (`formatRut`, `isValidRutFormat`), cálculo de quórum (`calculateQuorumPercentage`) y generación de actas CSV (`buildAttendanceCsv`). |
