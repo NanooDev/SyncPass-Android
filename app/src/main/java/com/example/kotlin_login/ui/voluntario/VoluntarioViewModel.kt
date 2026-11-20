@@ -31,13 +31,21 @@ class VoluntarioViewModel(
 
     fun loadInitialData() {
         viewModelScope.launch {
-            val list = repository.getAsistencias(forceRemote = false)
-            val pending = repository.getPendingAsistenciasCount()
-            _uiState.update {
-                it.copy(
-                    asistencias = list,
-                    pendingSyncCount = pending
-                )
+            runCatching {
+                val list = repository.getAsistencias(forceRemote = false)
+                val pending = repository.getPendingAsistenciasCount()
+                list to pending
+            }.onSuccess { (list, pending) ->
+                _uiState.update {
+                    it.copy(
+                        asistencias = list,
+                        pendingSyncCount = pending
+                    )
+                }
+            }.onFailure { err ->
+                _uiState.update {
+                    it.copy(feedbackMessage = "Error al cargar asistencias: ${err.message ?: "Error desconocido"}")
+                }
             }
         }
     }
@@ -118,16 +126,27 @@ class VoluntarioViewModel(
     fun onSyncPendingClick() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSyncing = true, feedbackMessage = null) }
-            val syncedCount = repository.syncPendingAsistencias()
-            val updatedList = repository.getAsistencias(forceRemote = false)
-            val remainingPending = repository.getPendingAsistenciasCount()
-            _uiState.update {
-                it.copy(
-                    isSyncing = false,
-                    asistencias = updatedList,
-                    pendingSyncCount = remainingPending,
-                    feedbackMessage = "Sincronización exitosa: $syncedCount registro(s) enviados a PostgreSQL (Supabase)."
-                )
+            runCatching {
+                val syncedCount = repository.syncPendingAsistencias()
+                val updatedList = repository.getAsistencias(forceRemote = false)
+                val remainingPending = repository.getPendingAsistenciasCount()
+                Triple(syncedCount, updatedList, remainingPending)
+            }.onSuccess { (syncedCount, updatedList, remainingPending) ->
+                _uiState.update {
+                    it.copy(
+                        isSyncing = false,
+                        asistencias = updatedList,
+                        pendingSyncCount = remainingPending,
+                        feedbackMessage = "Sincronización exitosa: $syncedCount registro(s) enviados a PostgreSQL (Supabase)."
+                    )
+                }
+            }.onFailure { err ->
+                _uiState.update {
+                    it.copy(
+                        isSyncing = false,
+                        feedbackMessage = "Error al sincronizar: ${err.message ?: "Sin conexión al servidor"}"
+                    )
+                }
             }
         }
     }
