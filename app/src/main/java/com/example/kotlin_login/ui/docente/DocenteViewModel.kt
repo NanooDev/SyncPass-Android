@@ -31,19 +31,29 @@ class DocenteViewModel(
     fun syncTalleres(showFeedback: Boolean = true) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSyncing = true) }
-            val list = repository.getTalleres(forceRemote = true)
-            _uiState.update { current ->
-                val selected = list.find { it.id == current.selectedTaller?.id } ?: list.firstOrNull()
-                current.copy(
-                    talleres = list,
-                    selectedTaller = selected,
-                    isSyncing = false,
-                    statusMessage = if (showFeedback) {
-                        "Talleres sincronizados en tiempo real con PostgreSQL Supabase (/api/talleres)"
-                    } else {
-                        current.statusMessage
-                    }
-                )
+            runCatching {
+                repository.getTalleres(forceRemote = true)
+            }.onSuccess { list ->
+                _uiState.update { current ->
+                    val selected = list.find { it.id == current.selectedTaller?.id } ?: list.firstOrNull()
+                    current.copy(
+                        talleres = list,
+                        selectedTaller = selected,
+                        isSyncing = false,
+                        statusMessage = if (showFeedback) {
+                            "Talleres sincronizados en tiempo real con PostgreSQL Supabase (/api/talleres)"
+                        } else {
+                            current.statusMessage
+                        }
+                    )
+                }
+            }.onFailure { err ->
+                _uiState.update { current ->
+                    current.copy(
+                        isSyncing = false,
+                        statusMessage = "Error al cargar talleres: ${err.message ?: "Error de red"}"
+                    )
+                }
             }
         }
     }
