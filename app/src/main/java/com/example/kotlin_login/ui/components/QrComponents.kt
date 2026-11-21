@@ -12,18 +12,21 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -45,34 +49,29 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun QrCodeView(
     data: String,
-    title: String = "Código de Acreditación",
+    title: String = "Código de acreditación",
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
+    SyncPassCard(modifier = modifier) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Canvas de QR 15x15 determinístico según el hash de data (fondo blanco para lectura óptima)
+            // Fondo blanco puro para lectura óptima en cámara
             Box(
                 modifier = Modifier
-                    .size(180.dp)
+                    .size(190.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(Color.White)
-                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
-                    .padding(8.dp),
+                    .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(16.dp))
+                    .padding(14.dp),
                 contentAlignment = Alignment.Center
             ) {
                 val matrixSize = 15
@@ -100,10 +99,10 @@ fun QrCodeView(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = data,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -112,7 +111,7 @@ fun QrCodeView(
 
 /**
  * Componente modular para escaneo y lectura de Códigos QR.
- * Proporciona un visor animado de enfoque con retícula de precisión y modo de entrada manual.
+ * Proporciona un visor animado minimalista y modo de entrada manual rápida.
  */
 @Composable
 fun QrScannerView(
@@ -122,8 +121,8 @@ fun QrScannerView(
     var manualInput by remember { mutableStateOf("") }
     val infiniteTransition = rememberInfiniteTransition(label = "LaserTransition")
     val laserY by infiniteTransition.animateFloat(
-        initialValue = 0.1f,
-        targetValue = 0.9f,
+        initialValue = 0.12f,
+        targetValue = 0.88f,
         animationSpec = infiniteRepeatable(
             animation = tween(1400, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -131,86 +130,84 @@ fun QrScannerView(
         label = "LaserY"
     )
 
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
+    SyncPassCard(modifier = modifier) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Lector de Acreditación QR",
+                text = "Escanear pase QR",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onSurface
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Alinee el código QR del pase dentro del visor de enfoque",
+                text = "Alinea el código dentro del recuadro",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // Visor de Cámara y Enfoque Simulado
             Box(
                 modifier = Modifier
-                    .size(200.dp)
-                    .background(Color(0xFF0F172A), RoundedCornerShape(8.dp))
-                    .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)),
+                    .size(210.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(Color(0xFF0F172A))
+                    .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.65f), RoundedCornerShape(22.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Canvas(modifier = Modifier.size(190.dp)) {
-                    // Retícula de esquinas
-                    val cornerLen = 24.dp.toPx()
-                    val strokeW = 4.dp.toPx()
+                Canvas(modifier = Modifier.size(164.dp)) {
+                    val cornerLen = 22.dp.toPx()
+                    val strokeW = 3.5.dp.toPx()
                     val c = Color(0xFF38BDF8)
 
-                    // Superior izquierda
                     drawLine(c, Offset(0f, 0f), Offset(cornerLen, 0f), strokeW)
                     drawLine(c, Offset(0f, 0f), Offset(0f, cornerLen), strokeW)
 
-                    // Superior derecha
                     drawLine(c, Offset(size.width, 0f), Offset(size.width - cornerLen, 0f), strokeW)
-                    drawLine(c, Offset(size.width, 0f), Offset(size.width - cornerLen, 0f), strokeW)
+                    drawLine(c, Offset(size.width, 0f), Offset(size.width, cornerLen), strokeW)
 
-                    // Inferior izquierda
                     drawLine(c, Offset(0f, size.height), Offset(cornerLen, size.height), strokeW)
                     drawLine(c, Offset(0f, size.height), Offset(0f, size.height - cornerLen), strokeW)
 
-                    // Inferior derecha
                     drawLine(c, Offset(size.width, size.height), Offset(size.width - cornerLen, size.height), strokeW)
                     drawLine(c, Offset(size.width, size.height), Offset(size.width, size.height - cornerLen), strokeW)
 
-                    // Línea de escaneo láser animada
                     val currentLaserPos = size.height * laserY
                     drawLine(
-                        color = Color(0xFF10B981),
-                        start = Offset(12.dp.toPx(), currentLaserPos),
-                        end = Offset(size.width - 12.dp.toPx(), currentLaserPos),
+                        color = Color(0xFF34D399),
+                        start = Offset(8.dp.toPx(), currentLaserPos),
+                        end = Offset(size.width - 8.dp.toPx(), currentLaserPos),
                         strokeWidth = 3.dp.toPx()
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // Botón de simulación de lectura instantánea
-            OutlinedButton(
+            Button(
                 onClick = {
                     val fakeQr = "SYNCPASS-RUT-1${(1000000..9999999).random()}-K"
                     onCodeScanned(fakeQr)
                 },
+                shape = RoundedCornerShape(14.dp),
+                contentPadding = PaddingValues(vertical = 14.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Simular Escaneo de Código QR")
+                Icon(
+                    imageVector = Icons.Rounded.QrCodeScanner,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Simular lectura QR",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Campo de entrada manual para contingencias en terreno
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -219,7 +216,8 @@ fun QrScannerView(
                 OutlinedTextField(
                     value = manualInput,
                     onValueChange = { manualInput = it },
-                    placeholder = { Text("O ingresar RUT manual...") },
+                    placeholder = { Text("RUT o código manual") },
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.weight(1f),
                     singleLine = true
                 )
@@ -230,9 +228,18 @@ fun QrScannerView(
                             manualInput = ""
                         }
                     },
-                    enabled = manualInput.isNotBlank()
+                    enabled = manualInput.isNotBlank(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary
+                    ),
+                    contentPadding = PaddingValues(horizontal = 18.dp, vertical = 16.dp)
                 ) {
-                    Text("Acreditar")
+                    Text(
+                        text = "Listo",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }

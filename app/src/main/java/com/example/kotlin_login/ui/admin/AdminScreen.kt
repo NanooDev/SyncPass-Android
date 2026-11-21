@@ -1,10 +1,10 @@
 package com.example.kotlin_login.ui.admin
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,14 +12,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BarChart
+import androidx.compose.material.icons.rounded.Group
+import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -27,13 +34,25 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.kotlin_login.ui.components.SyncPassBottomBar
+import com.example.kotlin_login.ui.components.SyncPassCard
+import com.example.kotlin_login.ui.components.SyncPassKpiTile
+import com.example.kotlin_login.ui.components.SyncPassNavTab
+import com.example.kotlin_login.ui.components.SyncPassSettingsActionsCard
+import com.example.kotlin_login.ui.components.SyncPassStatusPill
 import com.example.kotlin_login.ui.components.SyncPassTopBar
 import com.example.kotlin_login.ui.theme.SyncPassEmerald
+import com.example.kotlin_login.ui.theme.SyncPassEmeraldDark
+import com.example.kotlin_login.ui.theme.ThemeState
 
 @Composable
 fun AdminScreen(
@@ -42,166 +61,187 @@ fun AdminScreen(
     viewModel: AdminViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+
+    val tabs = remember {
+        listOf(
+            SyncPassNavTab("Resumen", Icons.Rounded.BarChart),
+            SyncPassNavTab("Equipo", Icons.Rounded.Group),
+            SyncPassNavTab("Avisos", Icons.Rounded.NotificationsActive)
+        )
+    }
 
     Scaffold(
         topBar = {
             SyncPassTopBar(
-                title = "Equipo y Resumen General",
-                subtitle = "Coordinación de Sedes · Duoc UC",
+                title = when (selectedTab) {
+                    1 -> "Equipo"
+                    2 -> "Avisos y Ajustes"
+                    else -> "Administración"
+                },
                 onBackClick = onBackClick,
                 onLogoutClick = onLogoutClick
             )
         },
+        bottomBar = {
+            SyncPassBottomBar(
+                tabs = tabs,
+                selectedIndex = selectedTab,
+                onSelect = { selectedTab = it }
+            )
+        },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+        when (selectedTab) {
+            // TAB 1: Métricas 2x2 limpias
+            0 -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Text(
-                        text = "Resumen de la semana",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                    OutlinedButton(
-                        onClick = { viewModel.syncAdminData() },
-                        enabled = !uiState.isSyncing,
-                        shape = RoundedCornerShape(8.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(if (uiState.isSyncing) "Sincronizando..." else "Actualizar")
+                        Text(
+                            text = "Resumen semanal",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        OutlinedButton(
+                            onClick = { viewModel.syncAdminData() },
+                            enabled = !uiState.isSyncing,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Refresh,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (uiState.isSyncing) "Actualizando..." else "Actualizar",
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
                     }
-                }
-            }
 
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     uiState.metrics.chunked(2).forEach { rowMetrics ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             rowMetrics.forEach { metric ->
-                                Card(
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Text(
-                                            text = metric.value,
-                                            style = MaterialTheme.typography.headlineMedium,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                        Text(
-                                            text = metric.label,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Text(
-                                            text = metric.detail,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
+                                SyncPassKpiTile(
+                                    value = metric.value,
+                                    label = metric.label,
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
                         }
                     }
                 }
             }
 
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Personas con acceso en sede",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            items(uiState.usersList, key = { it.id }) { user ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+            // TAB 2: Lista limpia de equipo (sin textos diminutos amontonados)
+            1 -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = user.nombre.replace(" (Ficticio)", "").replace(" (F)", ""),
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "${user.email.replace(".ficticio", "")} · ${user.role}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                    items(uiState.usersList, key = { it.id }) { user ->
+                        val displayName = user.nombre.replace(" (Ficticio)", "").replace(" (F)", "")
+                        val statusColor = if (user.activo) {
+                            if (ThemeState.isDarkTheme) SyncPassEmerald else SyncPassEmeraldDark
+                        } else {
+                            MaterialTheme.colorScheme.error
                         }
-                        val statusColor = if (user.activo) SyncPassEmerald else MaterialTheme.colorScheme.error
-                        Box(
-                            modifier = Modifier
-                                .background(statusColor.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
-                                .border(1.dp, statusColor.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = if (user.activo) "Activo" else "De baja",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = statusColor
-                            )
+
+                        SyncPassCard {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    modifier = Modifier.weight(1f),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = displayName.firstOrNull()?.uppercase() ?: "U",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    Column {
+                                        Text(
+                                            text = displayName,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = user.role,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                                SyncPassStatusPill(
+                                    text = if (user.activo) "Activo" else "Inactivo",
+                                    accentColor = statusColor
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+            // TAB 3: Notificaciones y Ajustes
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    SyncPassCard {
                         Text(
-                            text = "Centro de Notificaciones Institucionales",
+                            text = "Avisos al equipo",
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Envío de avisos en tiempo real hacia los dispositivos móviles de los equipos en terreno.",
+                            text = "Envía una notificación instantánea a los voluntarios en terreno.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
 
                         Button(
                             onClick = { viewModel.onSendPushNotification() },
                             enabled = !uiState.isSendingNotification,
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = RoundedCornerShape(14.dp),
+                            contentPadding = PaddingValues(vertical = 14.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             if (uiState.isSendingNotification) {
@@ -210,20 +250,25 @@ fun AdminScreen(
                                     strokeWidth = 2.dp,
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
-                                Spacer(modifier = Modifier.size(8.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
                             }
-                            Text("Emitir Notificación Push", fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "Enviar aviso push",
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
 
                         uiState.notificationFeedback?.let { feedback ->
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
                             Text(
                                 text = feedback,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = if (feedback.startsWith("Error")) MaterialTheme.colorScheme.error else SyncPassEmerald
+                                color = if (ThemeState.isDarkTheme) SyncPassEmerald else SyncPassEmeraldDark
                             )
                         }
                     }
+
+                    SyncPassSettingsActionsCard(onLogoutClick = onLogoutClick)
                 }
             }
         }

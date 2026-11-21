@@ -1,7 +1,6 @@
 package com.example.kotlin_login.ui.login
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -15,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,18 +22,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.LightMode
+import androidx.compose.material.icons.rounded.QrCode2
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -52,14 +53,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.kotlin_login.ui.theme.SyncPassEmerald
+import com.example.kotlin_login.ui.components.SyncPassCard
+import com.example.kotlin_login.ui.components.SyncPassSegmentedControl
+import com.example.kotlin_login.ui.theme.SyncPassCyan
+import com.example.kotlin_login.ui.theme.SyncPassEmeraldDark
+import com.example.kotlin_login.ui.theme.SyncPassIndigo
 import com.example.kotlin_login.ui.theme.ThemeState
 
 @Composable
@@ -91,366 +96,280 @@ fun LoginScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 18.dp, vertical = 14.dp),
-        contentAlignment = Alignment.Center
+            .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
+        // Alternador discreto de tema en esquina superior derecha
+        IconButton(
+            onClick = { ThemeState.toggle() },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(top = 8.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surface)
+                .border(0.75.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+        ) {
+            Icon(
+                imageVector = if (ThemeState.isDarkTheme) Icons.Rounded.LightMode else Icons.Rounded.DarkMode,
+                contentDescription = if (ThemeState.isDarkTheme) "Modo claro" else "Modo oscuro",
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .align(Alignment.Center)
                 .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Card(
+            // Cabecera limpia estilo iOS
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .animateContentSize(animationSpec = tween(260)),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Brush.linearGradient(listOf(SyncPassIndigo, SyncPassCyan))),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(22.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Icon(
+                    imageVector = Icons.Rounded.QrCode2,
+                    contentDescription = "SyncPass",
+                    tint = Color.White,
+                    modifier = Modifier.size(34.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Text(
+                text = "SyncPass",
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Acreditación rápida para talleres",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            SyncPassCard(
+                modifier = Modifier.animateContentSize(animationSpec = tween(240))
+            ) {
+                SyncPassSegmentedControl(
+                    options = listOf("Iniciar sesión", "Crear cuenta"),
+                    selectedIndex = if (state.isRegisterMode) 1 else 0,
+                    onSelect = { index -> viewModel.onSetRegisterMode(index == 1) }
+                )
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                AnimatedVisibility(
+                    visible = state.isRegisterMode,
+                    enter = fadeIn(tween(180)) + expandVertically(tween(180)),
+                    exit = fadeOut(tween(140)) + shrinkVertically(tween(140))
                 ) {
-                    // Header: Duoc UC / SyncPass badge + Theme Toggle
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(11.dp))
-                                    .background(MaterialTheme.colorScheme.primary),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "SP",
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.ExtraBold
-                                )
-                            }
-                            Column {
-                                Text(
-                                    text = "SyncPass",
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    letterSpacing = (-0.4).sp
-                                )
-                                Text(
-                                    text = "Talleres y vinculación en sede",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        IconButton(onClick = { ThemeState.toggle() }) {
-                            Icon(
-                                imageVector = if (ThemeState.isDarkTheme) Icons.Filled.LightMode else Icons.Filled.DarkMode,
-                                contentDescription = if (ThemeState.isDarkTheme) "Cambiar a Modo Claro" else "Cambiar a Modo Oscuro",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(18.dp))
-
-                    // Segmented Tab Switcher: Iniciar sesión / Crear cuenta
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
-                            .padding(4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        val loginTabBg by animateColorAsState(
-                            targetValue = if (!state.isRegisterMode) MaterialTheme.colorScheme.surface else Color.Transparent,
-                            animationSpec = tween(200),
-                            label = "loginTabBg"
-                        )
-                        val registerTabBg by animateColorAsState(
-                            targetValue = if (state.isRegisterMode) MaterialTheme.colorScheme.surface else Color.Transparent,
-                            animationSpec = tween(200),
-                            label = "registerTabBg"
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(9.dp))
-                                .background(loginTabBg)
-                                .clickable { viewModel.onSetRegisterMode(false) }
-                                .padding(vertical = 10.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Iniciar sesión",
-                                fontSize = 13.sp,
-                                fontWeight = if (!state.isRegisterMode) FontWeight.Bold else FontWeight.Medium,
-                                color = if (!state.isRegisterMode) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(9.dp))
-                                .background(registerTabBg)
-                                .clickable { viewModel.onSetRegisterMode(true) }
-                                .padding(vertical = 10.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Crear cuenta",
-                                fontSize = 13.sp,
-                                fontWeight = if (state.isRegisterMode) FontWeight.Bold else FontWeight.Medium,
-                                color = if (state.isRegisterMode) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Formulario obligatorio de credenciales (Iniciar sesión o Crear cuenta)
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        AnimatedVisibility(
-                            visible = state.isRegisterMode,
-                            enter = fadeIn(tween(200)) + expandVertically(tween(200)),
-                            exit = fadeOut(tween(150)) + shrinkVertically(tween(150))
-                        ) {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                OutlinedTextField(
-                                    value = state.fullName,
-                                    onValueChange = viewModel::onFullNameChange,
-                                    label = { Text("Nombre y apellido") },
-                                    isError = state.fullNameError != null,
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(10.dp),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                if (state.fullNameError != null) {
-                                    Text(
-                                        text = state.fullNameError ?: "",
-                                        color = MaterialTheme.colorScheme.error,
-                                        fontSize = 11.sp,
-                                        modifier = Modifier.padding(top = 2.dp, start = 4.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(10.dp))
-                            }
-                        }
-
                         OutlinedTextField(
-                            value = state.username,
-                            onValueChange = viewModel::onUsernameChange,
-                            label = { Text("Correo electrónico") },
-                            isError = state.usernameError != null,
+                            value = state.fullName,
+                            onValueChange = viewModel::onFullNameChange,
+                            label = { Text("Nombre completo") },
+                            isError = state.fullNameError != null,
                             singleLine = true,
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(14.dp),
                             modifier = Modifier.fillMaxWidth()
                         )
-                        if (state.usernameError != null) {
+                        if (state.fullNameError != null) {
                             Text(
-                                text = state.usernameError ?: "",
+                                text = state.fullNameError ?: "",
                                 color = MaterialTheme.colorScheme.error,
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(top = 2.dp, start = 4.dp)
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
                             )
                         }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        OutlinedTextField(
-                            value = state.password,
-                            onValueChange = viewModel::onPasswordChange,
-                            label = { Text("Contraseña (mín. 6 caracteres)") },
-                            isError = state.passwordError != null,
-                            singleLine = true,
-                            shape = RoundedCornerShape(10.dp),
-                            visualTransformation = if (state.isPasswordVisible)
-                                VisualTransformation.None
-                            else
-                                PasswordVisualTransformation(),
-                            trailingIcon = {
-                                IconButton(onClick = viewModel::onTogglePasswordVisibility) {
-                                    Icon(
-                                        imageVector = if (state.isPasswordVisible)
-                                            Icons.Filled.VisibilityOff
-                                        else
-                                            Icons.Filled.Visibility,
-                                        contentDescription = null
-                                    )
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        if (state.passwordError != null) {
-                            Text(
-                                text = state.passwordError ?: "",
-                                color = MaterialTheme.colorScheme.error,
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(top = 2.dp, start = 4.dp)
-                            )
-                        }
-
                         Spacer(modifier = Modifier.height(12.dp))
+                    }
+                }
 
-                        Text(
-                            text = "Selecciona tu perfil:",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
+                OutlinedTextField(
+                    value = state.username,
+                    onValueChange = viewModel::onUsernameChange,
+                    label = { Text("Correo electrónico") },
+                    isError = state.usernameError != null,
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (state.usernameError != null) {
+                    Text(
+                        text = state.usernameError ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                    )
+                }
 
-                        val roleOptions = listOf(
-                            "coordinator" to "Docente",
-                            "volunteer" to "Voluntario",
-                            "attendee" to "Beneficiario",
-                            "admin" to "Admin"
-                        )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = state.password,
+                    onValueChange = viewModel::onPasswordChange,
+                    label = { Text("Contraseña") },
+                    isError = state.passwordError != null,
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    visualTransformation = if (state.isPasswordVisible)
+                        VisualTransformation.None
+                    else
+                        PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = viewModel::onTogglePasswordVisibility) {
+                            Icon(
+                                imageVector = if (state.isPasswordVisible)
+                                    Icons.Rounded.VisibilityOff
+                                else
+                                    Icons.Rounded.Visibility,
+                                contentDescription = null
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (state.passwordError != null) {
+                    Text(
+                        text = state.passwordError ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Perfil de acceso",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                val roleOptions = listOf(
+                    "coordinator" to "Docente",
+                    "volunteer" to "Voluntario",
+                    "attendee" to "Beneficiario",
+                    "admin" to "Admin"
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    roleOptions.chunked(2).forEach { pair ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            roleOptions.forEach { (slug, label) ->
+                            pair.forEach { (slug, label) ->
                                 val selected = state.selectedRoleSlug == slug
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .clip(RoundedCornerShape(9.dp))
+                                        .clip(RoundedCornerShape(12.dp))
                                         .background(
                                             if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
                                             else MaterialTheme.colorScheme.surfaceVariant
                                         )
                                         .border(
-                                            1.dp,
-                                            if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                                            RoundedCornerShape(9.dp)
+                                            width = if (selected) 1.25.dp else 0.75.dp,
+                                            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                                            shape = RoundedCornerShape(12.dp)
                                         )
                                         .clickable { viewModel.onRoleSelectedChange(slug) }
-                                        .padding(vertical = 8.dp),
+                                        .padding(vertical = 11.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
                                         text = label,
-                                        fontSize = 11.sp,
+                                        style = MaterialTheme.typography.labelLarge,
                                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                     )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Button(
-                            onClick = viewModel::onLoginClick,
-                            enabled = !state.isLoading,
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (state.isRegisterMode) SyncPassEmerald else MaterialTheme.colorScheme.primary,
-                                contentColor = Color.White
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp)
-                        ) {
-                            if (state.isLoading) {
-                                CircularProgressIndicator(
-                                    color = Color.White,
-                                    modifier = Modifier.size(20.dp),
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Text(
-                                    text = if (state.isRegisterMode) "Crear cuenta e ingresar" else "Iniciar sesión",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
-                                )
-                            }
-                        }
-
-                        AnimatedVisibility(
-                            visible = !state.isRegisterMode,
-                            enter = fadeIn(tween(200)) + expandVertically(tween(200)),
-                            exit = fadeOut(tween(150)) + shrinkVertically(tween(150))
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Spacer(modifier = Modifier.height(14.dp))
-                                HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.outline,
-                                    thickness = 1.dp
-                                )
-                                Spacer(modifier = Modifier.height(14.dp))
-                                OutlinedButton(
-                                    onClick = onCognitoClick,
-                                    enabled = !isCognitoLoading,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(46.dp),
-                                    shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                                ) {
-                                    if (isCognitoLoading) {
-                                        CircularProgressIndicator(
-                                            color = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(18.dp),
-                                            strokeWidth = 2.dp
-                                        )
-                                    } else {
-                                        Text(
-                                            text = "Continuar con Amazon Cognito",
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 13.sp,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(14.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "SyncPass · Duoc UC",
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Sedes Maipú · Lo Espejo · San Bernardo",
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = viewModel::onLoginClick,
+                    enabled = !state.isLoading,
+                    shape = RoundedCornerShape(14.dp),
+                    contentPadding = PaddingValues(vertical = 15.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (state.isRegisterMode) SyncPassEmeraldDark else MaterialTheme.colorScheme.primary,
+                        contentColor = if (state.isRegisterMode) Color.White else MaterialTheme.colorScheme.onPrimary
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = if (state.isRegisterMode) "Crear cuenta" else "Entrar",
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = !state.isRegisterMode,
+                    enter = fadeIn(tween(180)) + expandVertically(tween(180)),
+                    exit = fadeOut(tween(140)) + shrinkVertically(tween(140))
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                            thickness = 0.75.dp
+                        )
+                        Spacer(modifier = Modifier.height(14.dp))
+                        OutlinedButton(
+                            onClick = onCognitoClick,
+                            enabled = !isCognitoLoading,
+                            shape = RoundedCornerShape(14.dp),
+                            contentPadding = PaddingValues(vertical = 14.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            if (isCognitoLoading) {
+                                CircularProgressIndicator(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(
+                                    text = "Continuar con Cognito",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
 
-        SnackbarHost(hostState = snackbar)
+        SnackbarHost(
+            hostState = snackbar,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
